@@ -1,0 +1,350 @@
+//
+// Interface for Gotcha
+
+// Two Text fields: 1. student email, 2. student password
+// will include button to trigger login process
+
+// authentication login not implemented!!
+
+/*
+ This code does the following:
+
+1. OnboardingView: The first view with swipeable content.
+2.  LoginView: The actual login screen.
+3. WelcomeView: The last screen of the onboarding sequence with a "Get Started" button.
+ 
+ */
+import SwiftUI
+
+struct LoginView: View {
+    @State private var selection = 0
+
+    var body: some View {
+        TabView(selection: $selection) {
+            FirstOnboardingScreen(selection: $selection)
+                .tag(0)
+            LoginScreen(selection: $selection)
+                .tag(1)
+            ThirdOnboardingScreen(selection: $selection)
+                .tag(2)
+        }
+        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+        .edgesIgnoringSafeArea(.all)
+    }
+}
+
+struct FirstOnboardingScreen: View {
+    @Binding var selection: Int
+    
+    var body: some View {
+        VStack {
+            Image("onboarding-1")
+                .resizable()
+                .scaledToFill()
+                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2)
+                .clipped()
+                .clipShape(BottomLeftRoundedCorner(radius: 60)) // Apply the custom shape here
+
+            
+            Spacer()
+            
+            Text("Find The Latest Products That You Like")
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Text("Find your dream fashion product as easy as scrolling the screen.")
+                .foregroundColor(.gray)
+                .font(.subheadline)
+                .padding([.leading, .bottom], 20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            
+            HStack {
+                Spacer()
+                PageIndicator(currentPage: 0)
+                Button("Next") {
+                    withAnimation {
+                        selection = 1
+                    }
+                }
+                .buttonStyle(OnboardingButtonStyle())
+            }
+            .padding(.trailing, 20)
+            .padding(.bottom, 20)
+        }
+        .background(Color.black)
+        .edgesIgnoringSafeArea(.all)
+    }
+}
+
+struct LoginScreen: View {
+    @Binding var selection: Int
+    @State private var username: String = ""
+    @State private var password: String = ""
+    @State private var isPasswordVisible: Bool = false
+
+    var body: some View {
+        VStack {
+            Spacer(minLength: 60)
+            HStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Login")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+
+                    Text("Please login to your account")
+                        .foregroundColor(.gray)
+                        .font(.subheadline)
+                }
+                Spacer()
+            }
+            .padding(.leading, 20)
+            
+            VStack(spacing: 15) {
+                HStack {
+                    Text("Username")
+                        .foregroundColor(.gray)
+                        .font(.caption)
+                    Spacer()
+                }
+                .padding(.leading, 20)
+                
+                TextField("Enter your username", text: $username)
+                    .padding()
+                    .background(Color.white.opacity(0.2))
+                    .cornerRadius(5)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 20)
+                
+                HStack {
+                    Text("Password")
+                        .foregroundColor(.gray)
+                        .font(.caption)
+                    Spacer()
+                }
+                .padding(.leading, 20)
+                
+                HStack {
+                    if isPasswordVisible {
+                        TextField("Password", text: $password)
+                    } else {
+                        SecureField("Password", text: $password)
+                    }
+                    Button(action: {
+                        isPasswordVisible.toggle()
+                    }) {
+                        Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
+                            .foregroundColor(.gray)
+                    }
+                }
+                .padding()
+                .background(Color.white.opacity(0.2))
+                .cornerRadius(5)
+                .padding(.horizontal, 20)
+
+                HStack {
+                    Spacer()
+                    Button("Forgot Password?") {
+                        // Forgot password action
+                    }
+                    .foregroundColor(.white)
+                    .font(.caption)
+                    .padding(.trailing, 20)
+                }
+                
+                Button("Login") {
+                    // Login action
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                
+                Text("Or login with account")
+                    .foregroundColor(.gray)
+                    .padding()
+
+                SocialLoginButton(platform: "Google")
+                SocialLoginButton(platform: "Facebook")
+                
+                Spacer()
+                
+                HStack {
+                    Text("Don't have an account?")
+                        .foregroundColor(.gray)
+                    Button("Sign Up") {
+                        // Sign up action
+                    }
+                    .foregroundColor(.blue)
+                }
+                .padding(.bottom, 20)
+            }
+            .padding(.top, 20)
+        }
+        .background(Color.black)
+    }
+}
+
+struct ThirdOnboardingScreen: View {
+    @Binding var selection: Int
+    
+    var body: some View {
+        VStack {
+            Image("onboarding-2")
+                .resizable()
+                .scaledToFill()
+                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2)
+                .clipped()
+                .clipShape(BottomRightRoundedCorner(radius: 60)) // Apply the custom shape here
+
+
+            Spacer()
+            
+            Text("Enjoy Free Shipping and Express Shipping")
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Text("You can enjoy fast delivery without having to pay extra.")
+                .foregroundColor(.gray)
+                .font(.subheadline)
+                .padding([.leading, .bottom], 20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            
+            HStack {
+                Spacer()
+                PageIndicator(currentPage: 2)
+                Button("Get Started") {
+                    withAnimation {
+                        // Handle get started action
+                    }
+                }
+                .buttonStyle(OnboardingButtonStyle())
+            }
+            .padding(.trailing, 20)
+            .padding(.bottom, 20)
+        }
+        .background(Color.black)
+        .edgesIgnoringSafeArea(.all)
+    }
+}
+
+// Make sure to have the "onboarding-3" image in your asset catalog.
+
+
+struct PageControl: View {
+    var currentPage: Int
+    
+    var body: some View {
+        HStack {
+            ForEach(0..<3) { index in
+                Circle()
+                    .fill(index == currentPage ? Color.blue : Color.white.opacity(0.6))
+                    .frame(width: index == currentPage ? 20 : 8, height: 8)
+            }
+        }
+    }
+}
+
+struct PrimaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Self.Configuration) -> some View {
+        configuration.label
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(Color.blue)
+            .cornerRadius(25)
+            .scaleEffect(configuration.isPressed ? 0.9 : 1)
+    }
+}
+
+struct SocialLoginButton: View {
+    let platform: String
+    
+    var body: some View {
+        Button(action: {
+            // Social login logic
+        }) {
+            HStack {
+                Image(platform) // Replace with your social logo images
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 24, height: 24)
+                Text(platform)
+                    .foregroundColor(.white)
+                    .font(.headline)
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(Color.gray)
+            .cornerRadius(10)
+        }
+        .padding(.horizontal, 20)
+    }
+}
+
+struct BottomLeftRoundedCorner: Shape {
+    var radius: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        // Define the corners we want to mask, in this case .bottomLeft
+        let rounded = UIBezierPath(roundedRect: rect, byRoundingCorners: [.bottomLeft], cornerRadii: CGSize(width: radius, height: radius))
+        path.addPath(Path(rounded.cgPath))
+
+        return path
+    }
+}
+
+struct BottomRightRoundedCorner: Shape {
+    var radius: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        // Define the corners we want to mask, in this case .bottomRight
+        let rounded = UIBezierPath(roundedRect: rect, byRoundingCorners: [.bottomRight], cornerRadii: CGSize(width: radius, height: radius))
+        path.addPath(Path(rounded.cgPath))
+
+        return path
+    }
+}
+
+
+struct PageIndicator: View {
+    var currentPage: Int
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(0..<3) { index in
+                Circle()
+                    .fill(currentPage == index ? Color.blue : Color.white)
+                    .frame(width: currentPage == index ? 20 : 8, height: 8)
+            }
+        }
+    }
+}
+
+struct OnboardingButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundColor(.white)
+            .padding(.horizontal)
+            .padding(.vertical, 12)
+            .background(Color.blue)
+            .cornerRadius(15)
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+    }
+}
+
+
+// PageControl, SocialLoginButton, and PrimaryButtonStyle remain unchanged.
+// Make sure to replace "onboarding-1" and "onboarding-3" with the actual image names in your asset catalog.
+// Make sure you have the appropriate image and icon assets in your Xcode project.
+
+
+#Preview {
+    LoginView()
+}

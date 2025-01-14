@@ -1,0 +1,363 @@
+import SwiftUI
+
+// MARK: - Product Model
+struct Product: Identifiable {
+    let id = UUID()
+    let name: String
+    let price: Double
+    let imageName: String
+    let category: String  // Category to which the product belongs
+    var isFavorite: Bool = false
+
+    static let sampleProducts: [Product] = [
+        Product(name: "T-shirt with Blade Print", price: 469, imageName: "tshirt", category: "Clothing"),
+        Product(name: "Ace High-top Sneakers", price: 739, imageName: "sneakers", category: "Clothing"),
+        Product(name: "Le Marché Watch", price: 1199, imageName: "watch", category: "Electronics"),
+        Product(name: "Oversize Polo", price: 989, imageName: "polo", category: "Clothing")
+        // Add more sample products as needed
+    ]
+}
+
+// MARK: - Search Bar View
+struct SearchBarView: View {
+    @Binding var searchText: String
+
+    var body: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.gray)
+                .padding(.leading, 8)
+
+            TextField("What are you looking for?", text: $searchText)
+                .foregroundColor(.primary)
+                .padding(8)
+                .background(Color(.systemGray6))
+                .cornerRadius(10)
+            
+            if !searchText.isEmpty {
+                Button(action: { self.searchText = "" }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.gray)
+                        .padding(.trailing, 8)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Settings Button
+struct SettingsButton: View {
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "slider.horizontal.3")
+                .foregroundColor(Color.gray)
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(10)
+        }
+    }
+}
+
+// MARK: - Category Selector
+struct CategorySelector: View {
+    @Binding var selectedCategory: String
+    let categories: [String]
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 16) {
+                ForEach(categories, id: \.self) { category in
+                    CategoryButton(category: category,
+                                   isSelected: selectedCategory == category,
+                                   action: {
+                        self.selectedCategory = category
+                    })
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+}
+
+// MARK: - Category Button
+struct CategoryButton: View {
+    let category: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(category)
+                .foregroundColor(isSelected ? Color.orange : Color.primary)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .background(isSelected ? Color.orange.opacity(0.2) : Color.clear)
+                .cornerRadius(15)
+        }
+    }
+}
+
+// MARK: - Product Item View
+struct ProductItemView: View {
+    @Binding var product: Product
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            ZStack(alignment: Alignment(horizontal: .trailing, vertical: .top)) {
+                Image(product.imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 150)
+                    .cornerRadius(10)
+                    .clipped()
+
+                Button(action: {
+                    product.isFavorite.toggle()
+                }) {
+                    Image(systemName: product.isFavorite ? "star.fill" : "star")
+                        .foregroundColor(product.isFavorite ? .yellow : .gray)
+                        .padding(10)
+                        .background(Color.white)
+                        .cornerRadius(25)
+                        .shadow(radius: 5)
+                }
+            }
+
+            Text("$\(product.price, specifier: "%.2f")")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+
+            Text(product.name)
+                .font(.headline)
+                .foregroundColor(.primary)
+                .lineLimit(1)
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(radius: 2)
+    }
+}
+
+// MARK: - Products Grid
+struct ProductsGrid: View {
+    @Binding var products: [Product]
+
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 20)], spacing: 20) {
+            ForEach($products) { $product in
+                ProductItemView(product: $product)
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
+// MARK: - Bottom Navigation Bar
+struct BottomNavigationBar: View {
+    @Binding var selectedTab: String
+
+    var body: some View {
+        HStack {
+            // Explore Button
+            Button(action: {
+                self.selectedTab = "Explore"
+            }) {
+                VStack {
+                    Image(systemName: selectedTab == "Explore" ? "house.fill" : "house")
+                        .foregroundColor(selectedTab == "Explore" ? .orange : .gray)
+                    Text("Explore")
+                        .foregroundColor(selectedTab == "Explore" ? .orange : .gray)
+                }
+                .padding()
+                .background(selectedTab == "Explore" ? Color(.systemGray6) : Color.clear)
+                .cornerRadius(10)
+            }
+
+            Spacer()
+
+            // Favorites Button
+            Button(action: {
+                self.selectedTab = "Favorites"
+            }) {
+                VStack {
+                    Image(systemName: selectedTab == "Favorites" ? "star.fill" : "star")
+                        .foregroundColor(selectedTab == "Favorites" ? .orange : .gray)
+                }
+                .padding()
+                .background(selectedTab == "Favorites" ? Color(.systemGray6) : Color.clear)
+                .cornerRadius(10)
+            }
+
+            Spacer()
+
+            // Messages Button
+            Button(action: {
+                self.selectedTab = "Messages"
+            }) {
+                VStack {
+                    Image(systemName: selectedTab == "Messages" ? "message.fill" : "message")
+                        .foregroundColor(selectedTab == "Messages" ? .orange : .gray)
+                }
+                .padding()
+                .background(selectedTab == "Messages" ? Color(.systemGray6) : Color.clear)
+                .cornerRadius(10)
+            }
+
+            Spacer()
+
+            // Profile Button
+            Button(action: {
+                self.selectedTab = "Profile"
+            }) {
+                VStack {
+                    Image(systemName: selectedTab == "Profile" ? "person.fill" : "person")
+                        .foregroundColor(selectedTab == "Profile" ? .orange : .gray)
+                }
+                .padding()
+                .background(selectedTab == "Profile" ? Color(.systemGray6) : Color.clear)
+                .cornerRadius(10)
+            }
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(20)
+        .shadow(radius: 5)
+        .edgesIgnoringSafeArea(.bottom)
+    }
+}
+
+// MARK: - Explore View
+struct ExploreView: View {
+    var body: some View {
+        VStack {
+            Text("Welcome to Explore!")
+                .font(.largeTitle)
+                .padding()
+            Image(systemName: "star.fill")
+                .resizable()
+                .frame(width: 100, height: 100)
+                .foregroundColor(.orange)
+        }
+    }
+}
+
+// MARK: - Messages View
+struct MessagesView: View {
+    var body: some View {
+        VStack {
+            Text("Messages")
+                .font(.largeTitle)
+                .padding()
+            Image(systemName: "message.fill")
+                .resizable()
+                .frame(width: 100, height: 100)
+                .foregroundColor(.blue)
+        }
+    }
+}
+
+// MARK: - Marketplace View
+struct MarketplaceView: View {
+    @State private var searchText: String = ""
+    @State private var selectedCategory: String = "All"
+    @State private var showingSettings = false
+    @State private var selectedTab: String = "Explore"
+
+    @State private var products: [Product] = Product.sampleProducts
+
+    // Sample categories
+    let categories = ["All", "Clothing", "Electronics", "Furniture", "Appliances", "Books"]
+
+    var body: some View {
+        VStack {
+            if selectedTab == "Explore" {
+                // Explore Tab Content
+                VStack {
+                    // Search Bar and Settings Button
+                    HStack {
+                        SearchBarView(searchText: $searchText)
+                        SettingsButton {
+                            showingSettings.toggle()
+                        }
+                    }
+                    .padding()
+
+                    // Categories Selector
+                    CategorySelector(selectedCategory: $selectedCategory, categories: categories)
+                        .padding(.vertical)
+
+                    // Products Grid
+                    ScrollView {
+                        ProductsGrid(products: productsFiltered)
+                    }
+                }
+            } else if selectedTab == "Favorites" {
+                // Favorites Tab Content
+                ScrollView {
+                    ProductsGrid(products: favoriteProducts)
+                }
+                .padding(.top)
+            } else if selectedTab == "Messages" {
+                // Messages Tab Content
+                MessagesView()
+            } else if selectedTab == "Profile" {
+                // Profile Tab Content
+                Text("Profile View")
+            }
+
+            Spacer() // Ensures the BottomNavigationBar stays at the bottom
+
+            // Bottom Navigation Bar
+            BottomNavigationBar(selectedTab: $selectedTab)
+        }
+        .background(Color.white.edgesIgnoringSafeArea(.all))
+        .sheet(isPresented: $showingSettings) {
+            Text("Settings View") // Placeholder for settings view
+        }
+    }
+
+    // Filter products based on the search text and selected category
+    var productsFiltered: Binding<[Product]> {
+        Binding(
+            get: {
+                let filteredByCategory = selectedCategory == "All" ? products : products.filter { $0.category == selectedCategory }
+                if searchText.isEmpty {
+                    return filteredByCategory
+                } else {
+                    return filteredByCategory.filter { $0.name.lowercased().contains(searchText.lowercased()) }
+                }
+            },
+            set: { newProducts in
+                for product in newProducts {
+                    if let index = products.firstIndex(where: { $0.id == product.id }) {
+                        products[index] = product
+                    }
+                }
+            }
+        )
+    }
+
+    // Get the favorite products
+    var favoriteProducts: Binding<[Product]> {
+        Binding(
+            get: { products.filter { $0.isFavorite } },
+            set: { newFavorites in
+                for product in newFavorites {
+                    if let index = products.firstIndex(where: { $0.id == product.id }) {
+                        products[index].isFavorite = product.isFavorite
+                    }
+                }
+            }
+        )
+    }
+}
+
+// MARK: - Preview
+struct MarketplaceView_Previews: PreviewProvider {
+    static var previews: some View {
+        MarketplaceView()
+    }
+}

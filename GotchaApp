@@ -1,0 +1,17 @@
+//
+//  GotchaApp.swift
+//  Gotcha
+//
+//  Created by Nicholas Minieri on 4/28/24.
+//
+
+import SwiftUI
+
+@main
+struct GotchaApp: App {
+    var body: some Scene {
+        WindowGroup {
+            LoginView()
+        }
+    }
+}
