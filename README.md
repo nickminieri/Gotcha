@@ -76,7 +76,7 @@ We welcome contributions! To contribute:
 5. Push your fork:
    ```bash
    git push origin feature-name
-6. Create a Pull Request on the Gotcha Repository
+6. Create a Pull Request on the [Gotcha Repository](https://github.com/nickminieri/Gotcha)
 
 ## **This project is a work in progress. Stay tuned for updates! 🚀**
 
