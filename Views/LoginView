@@ -1,350 +1,453 @@
 //
-// Interface for Gotcha
+//  LoginView.swift
+//  Gotcha
+//
+//  Created by Nicholas Minieri on 4/28/24.
+//
 
-// Two Text fields: 1. student email, 2. student password
-// will include button to trigger login process
-
-// authentication login not implemented!!
-
-/*
- This code does the following:
-
-1. OnboardingView: The first view with swipeable content.
-2.  LoginView: The actual login screen.
-3. WelcomeView: The last screen of the onboarding sequence with a "Get Started" button.
- 
- */
 import SwiftUI
 
+// MARK: - Login Root
 struct LoginView: View {
-    @State private var selection = 0
+    @EnvironmentObject var appState: AppState
+    @State private var page = 0
 
     var body: some View {
-        TabView(selection: $selection) {
-            FirstOnboardingScreen(selection: $selection)
-                .tag(0)
-            LoginScreen(selection: $selection)
-                .tag(1)
-            ThirdOnboardingScreen(selection: $selection)
-                .tag(2)
+        ZStack {
+            Color(red: 0.07, green: 0.07, blue: 0.10)
+                .ignoresSafeArea()
+
+            AnimatedBlobs()
+
+            VStack(spacing: 0) {
+                TabView(selection: $page) {
+                    OnboardingPage1(page: $page).tag(0)
+                    OnboardingPage2(page: $page).tag(1)
+                    LoginFormPage().tag(2)
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+
+                // Animated pill dots
+                HStack(spacing: 8) {
+                    ForEach(0..<3, id: \.self) { i in
+                        Capsule()
+                            .fill(page == i
+                                  ? Color(red: 0.65, green: 0.45, blue: 1.0)
+                                  : Color.white.opacity(0.2))
+                            .frame(width: page == i ? 24 : 8, height: 8)
+                            .animation(.spring(response: 0.35, dampingFraction: 0.7), value: page)
+                    }
+                }
+                .padding(.bottom, 36)
+            }
         }
-        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-        .edgesIgnoringSafeArea(.all)
     }
 }
 
-struct FirstOnboardingScreen: View {
-    @Binding var selection: Int
-    
-    var body: some View {
-        VStack {
-            Image("onboarding-1")
-                .resizable()
-                .scaledToFill()
-                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2)
-                .clipped()
-                .clipShape(BottomLeftRoundedCorner(radius: 60)) // Apply the custom shape here
+// MARK: - Animated Background Blobs
+struct AnimatedBlobs: View {
+    @State private var animating = false
 
-            
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(Color(red: 0.50, green: 0.30, blue: 1.00).opacity(0.28))
+                .frame(width: 340)
+                .blur(radius: 90)
+                .offset(x: animating ? -90 : -110, y: animating ? -260 : -220)
+
+            Circle()
+                .fill(Color(red: 0.90, green: 0.35, blue: 0.70).opacity(0.18))
+                .frame(width: 270)
+                .blur(radius: 80)
+                .offset(x: animating ? 130 : 110, y: animating ? 240 : 280)
+
+            Circle()
+                .fill(Color(red: 0.20, green: 0.55, blue: 1.00).opacity(0.14))
+                .frame(width: 200)
+                .blur(radius: 65)
+                .offset(x: animating ? -10 : 20, y: animating ? 80 : 40)
+        }
+        .allowsHitTesting(false)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 7).repeatForever(autoreverses: true)) {
+                animating = true
+            }
+        }
+    }
+}
+
+// MARK: - Onboarding Page 1
+struct OnboardingPage1: View {
+    @Binding var page: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
             Spacer()
-            
-            Text("Find The Latest Products That You Like")
-                .font(.title)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-                .padding(.horizontal, 20)
-                .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text("Find your dream fashion product as easy as scrolling the screen.")
-                .foregroundColor(.gray)
-                .font(.subheadline)
-                .padding([.leading, .bottom], 20)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
-            HStack {
-                Spacer()
-                PageIndicator(currentPage: 0)
-                Button("Next") {
-                    withAnimation {
-                        selection = 1
-                    }
-                }
-                .buttonStyle(OnboardingButtonStyle())
+            ZStack {
+                Circle()
+                    .fill(Color(red: 0.50, green: 0.32, blue: 1.00).opacity(0.18))
+                    .frame(width: 170, height: 170)
+                Image(systemName: "bag.fill")
+                    .font(.system(size: 68, weight: .semibold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color(red: 0.60, green: 0.40, blue: 1.00),
+                                     Color(red: 0.90, green: 0.62, blue: 1.00)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
             }
-            .padding(.trailing, 20)
-            .padding(.bottom, 20)
+            .frame(maxWidth: .infinity)
+            .padding(.bottom, 52)
+
+            Text("Gotcha.")
+                .font(.system(size: 54, weight: .black, design: .rounded))
+                .foregroundColor(.white)
+                .padding(.horizontal, 32)
+
+            Text("Buy, sell, and trade with\nyour campus community.")
+                .font(.system(size: 18, weight: .regular, design: .rounded))
+                .foregroundColor(.white.opacity(0.55))
+                .lineSpacing(5)
+                .padding(.horizontal, 32)
+                .padding(.top, 14)
+
+            Spacer()
+            Spacer()
+
+            GotchaButton(label: "Let's go", icon: "arrow.right") {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                    page = 1
+                }
+            }
+            .padding(.horizontal, 32)
+            .padding(.bottom, 28)
         }
-        .background(Color.black)
-        .edgesIgnoringSafeArea(.all)
     }
 }
 
-struct LoginScreen: View {
-    @Binding var selection: Int
-    @State private var username: String = ""
-    @State private var password: String = ""
-    @State private var isPasswordVisible: Bool = false
+// MARK: - Onboarding Page 2
+struct OnboardingPage2: View {
+    @Binding var page: Int
 
     var body: some View {
-        VStack {
-            Spacer(minLength: 60)
-            HStack {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Login")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
+        VStack(alignment: .leading, spacing: 0) {
+            Spacer()
 
-                    Text("Please login to your account")
-                        .foregroundColor(.gray)
-                        .font(.subheadline)
-                }
-                Spacer()
+            ZStack {
+                Circle()
+                    .fill(Color(red: 0.10, green: 0.65, blue: 0.90).opacity(0.18))
+                    .frame(width: 170, height: 170)
+                Image(systemName: "checkmark.shield.fill")
+                    .font(.system(size: 68, weight: .semibold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color(red: 0.10, green: 0.65, blue: 0.90),
+                                     Color(red: 0.25, green: 0.90, blue: 0.72)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
             }
-            .padding(.leading, 20)
-            
-            VStack(spacing: 15) {
-                HStack {
-                    Text("Username")
-                        .foregroundColor(.gray)
-                        .font(.caption)
-                    Spacer()
-                }
-                .padding(.leading, 20)
-                
-                TextField("Enter your username", text: $username)
-                    .padding()
-                    .background(Color.white.opacity(0.2))
-                    .cornerRadius(5)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 20)
-                
-                HStack {
-                    Text("Password")
-                        .foregroundColor(.gray)
-                        .font(.caption)
-                    Spacer()
-                }
-                .padding(.leading, 20)
-                
-                HStack {
-                    if isPasswordVisible {
-                        TextField("Password", text: $password)
-                    } else {
-                        SecureField("Password", text: $password)
-                    }
-                    Button(action: {
-                        isPasswordVisible.toggle()
-                    }) {
-                        Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
-                            .foregroundColor(.gray)
-                    }
-                }
-                .padding()
-                .background(Color.white.opacity(0.2))
-                .cornerRadius(5)
-                .padding(.horizontal, 20)
+            .frame(maxWidth: .infinity)
+            .padding(.bottom, 52)
 
-                HStack {
-                    Spacer()
-                    Button("Forgot Password?") {
-                        // Forgot password action
-                    }
-                    .foregroundColor(.white)
-                    .font(.caption)
-                    .padding(.trailing, 20)
-                }
-                
-                Button("Login") {
-                    // Login action
-                }
-                .buttonStyle(PrimaryButtonStyle())
-                
-                Text("Or login with account")
-                    .foregroundColor(.gray)
-                    .padding()
+            Text("Students\nonly.")
+                .font(.system(size: 54, weight: .black, design: .rounded))
+                .foregroundColor(.white)
+                .padding(.horizontal, 32)
 
-                SocialLoginButton(platform: "Google")
-                SocialLoginButton(platform: "Facebook")
-                
-                Spacer()
-                
-                HStack {
+            Text("Every account is verified through\na campus email. No strangers.")
+                .font(.system(size: 18, weight: .regular, design: .rounded))
+                .foregroundColor(.white.opacity(0.55))
+                .lineSpacing(5)
+                .padding(.horizontal, 32)
+                .padding(.top, 14)
+
+            Spacer()
+            Spacer()
+
+            GotchaButton(label: "Sign in", icon: "arrow.right", colors: [
+                Color(red: 0.10, green: 0.65, blue: 0.90),
+                Color(red: 0.25, green: 0.90, blue: 0.72)
+            ]) {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                    page = 2
+                }
+            }
+            .padding(.horizontal, 32)
+            .padding(.bottom, 28)
+        }
+    }
+}
+
+// MARK: - Login Form Page
+struct LoginFormPage: View {
+    @EnvironmentObject var appState: AppState
+    @State private var email = ""
+    @State private var password = ""
+    @State private var isPasswordVisible = false
+    @State private var isLoading = false
+    @FocusState private var focusedField: LoginField?
+
+    private enum LoginField { case email, password }
+
+    private var canSubmit: Bool { !email.isEmpty && !password.isEmpty && !isLoading }
+
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 0) {
+                Spacer().frame(height: 52)
+
+                Text("Welcome\nback.")
+                    .font(.system(size: 46, weight: .black, design: .rounded))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 32)
+
+                Text("Sign in to your campus account.")
+                    .font(.system(size: 16, design: .rounded))
+                    .foregroundColor(.white.opacity(0.45))
+                    .padding(.horizontal, 32)
+                    .padding(.top, 8)
+
+                VStack(spacing: 14) {
+                    FloatingField(
+                        label: "Campus Email",
+                        placeholder: "you@university.edu",
+                        text: $email,
+                        isFocused: focusedField == .email
+                    )
+                    .keyboardType(.emailAddress)
+                    .autocapitalization(.none)
+                    .autocorrectionDisabled()
+                    .focused($focusedField, equals: .email)
+
+                    // Password field (custom to support visibility toggle)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Password")
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundColor(.white.opacity(0.45))
+                            .padding(.leading, 4)
+                        HStack {
+                            Group {
+                                if isPasswordVisible {
+                                    TextField("", text: $password,
+                                              prompt: Text("••••••••").foregroundColor(.white.opacity(0.22)))
+                                } else {
+                                    SecureField("", text: $password,
+                                                prompt: Text("••••••••").foregroundColor(.white.opacity(0.22)))
+                                }
+                            }
+                            .focused($focusedField, equals: .password)
+                            .foregroundColor(.white)
+                            .font(.system(size: 16, design: .rounded))
+
+                            Button {
+                                isPasswordVisible.toggle()
+                            } label: {
+                                Image(systemName: isPasswordVisible ? "eye.slash" : "eye")
+                                    .foregroundColor(.white.opacity(0.35))
+                                    .font(.system(size: 16))
+                                    .animation(.easeInOut(duration: 0.15), value: isPasswordVisible)
+                            }
+                        }
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(Color.white.opacity(focusedField == .password ? 0.11 : 0.07))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .strokeBorder(
+                                            Color.white.opacity(focusedField == .password ? 0.22 : 0),
+                                            lineWidth: 1
+                                        )
+                                )
+                        )
+                        .animation(.easeInOut(duration: 0.2), value: focusedField)
+                    }
+
+                    HStack {
+                        Spacer()
+                        Button("Forgot password?") { }
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundColor(Color(red: 0.65, green: 0.48, blue: 1.00))
+                    }
+                }
+                .padding(.horizontal, 32)
+                .padding(.top, 36)
+
+                // Sign in button
+                Button {
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    isLoading = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                        appState.login()
+                    }
+                } label: {
+                    ZStack {
+                        if isLoading {
+                            ProgressView().tint(.white)
+                        } else {
+                            Text("Sign in")
+                                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                .foregroundColor(.white)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(red: 0.50, green: 0.32, blue: 1.00),
+                                     Color(red: 0.85, green: 0.55, blue: 1.00)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .clipShape(Capsule())
+                    .opacity(canSubmit ? 1.0 : 0.45)
+                    .animation(.easeInOut(duration: 0.2), value: canSubmit)
+                }
+                .disabled(!canSubmit)
+                .padding(.horizontal, 32)
+                .padding(.top, 28)
+
+                // Divider
+                HStack(spacing: 12) {
+                    Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
+                    Text("or")
+                        .font(.system(size: 13, design: .rounded))
+                        .foregroundColor(.white.opacity(0.28))
+                    Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
+                }
+                .padding(.horizontal, 32)
+                .padding(.top, 24)
+
+                VStack(spacing: 12) {
+                    SocialAuthButton(label: "Continue with Apple", icon: "apple.logo")
+                    SocialAuthButton(label: "Continue with Google", icon: "globe")
+                }
+                .padding(.horizontal, 32)
+                .padding(.top, 16)
+
+                HStack(spacing: 4) {
                     Text("Don't have an account?")
-                        .foregroundColor(.gray)
-                    Button("Sign Up") {
-                        // Sign up action
-                    }
-                    .foregroundColor(.blue)
+                        .foregroundColor(.white.opacity(0.38))
+                    Button("Sign up") { }
+                        .foregroundColor(Color(red: 0.65, green: 0.48, blue: 1.00))
                 }
-                .padding(.bottom, 20)
+                .font(.system(size: 14, design: .rounded))
+                .frame(maxWidth: .infinity)
+                .padding(.top, 24)
+                .padding(.bottom, 40)
             }
-            .padding(.top, 20)
         }
-        .background(Color.black)
     }
 }
 
-struct ThirdOnboardingScreen: View {
-    @Binding var selection: Int
-    
+// MARK: - Floating Field
+struct FloatingField: View {
+    let label: String
+    let placeholder: String
+    @Binding var text: String
+    let isFocused: Bool
+
     var body: some View {
-        VStack {
-            Image("onboarding-2")
-                .resizable()
-                .scaledToFill()
-                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2)
-                .clipped()
-                .clipShape(BottomRightRoundedCorner(radius: 60)) // Apply the custom shape here
-
-
-            Spacer()
-            
-            Text("Enjoy Free Shipping and Express Shipping")
-                .font(.title)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-                .padding(.horizontal, 20)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            Text("You can enjoy fast delivery without having to pay extra.")
-                .foregroundColor(.gray)
-                .font(.subheadline)
-                .padding([.leading, .bottom], 20)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
-            HStack {
-                Spacer()
-                PageIndicator(currentPage: 2)
-                Button("Get Started") {
-                    withAnimation {
-                        // Handle get started action
-                    }
-                }
-                .buttonStyle(OnboardingButtonStyle())
-            }
-            .padding(.trailing, 20)
-            .padding(.bottom, 20)
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .foregroundColor(.white.opacity(0.45))
+                .padding(.leading, 4)
+            TextField(
+                "",
+                text: $text,
+                prompt: Text(placeholder).foregroundColor(.white.opacity(0.22))
+            )
+            .foregroundColor(.white)
+            .font(.system(size: 16, design: .rounded))
+            .padding(.horizontal, 18)
+            .padding(.vertical, 16)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.white.opacity(isFocused ? 0.11 : 0.07))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(Color.white.opacity(isFocused ? 0.22 : 0), lineWidth: 1)
+                    )
+            )
+            .animation(.easeInOut(duration: 0.2), value: isFocused)
         }
-        .background(Color.black)
-        .edgesIgnoringSafeArea(.all)
     }
 }
 
-// Make sure to have the "onboarding-3" image in your asset catalog.
+// MARK: - Social Auth Button
+struct SocialAuthButton: View {
+    let label: String
+    let icon: String
 
-
-struct PageControl: View {
-    var currentPage: Int
-    
     var body: some View {
-        HStack {
-            ForEach(0..<3) { index in
-                Circle()
-                    .fill(index == currentPage ? Color.blue : Color.white.opacity(0.6))
-                    .frame(width: index == currentPage ? 20 : 8, height: 8)
+        Button { } label: {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .medium))
+                Text(label)
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
             }
-        }
-    }
-}
-
-struct PrimaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Self.Configuration) -> some View {
-        configuration.label
-            .padding()
+            .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .background(Color.blue)
-            .cornerRadius(25)
-            .scaleEffect(configuration.isPressed ? 0.9 : 1)
+            .frame(height: 52)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.white.opacity(0.07))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.11), lineWidth: 1)
+                    )
+            )
+        }
     }
 }
 
-struct SocialLoginButton: View {
-    let platform: String
-    
+// MARK: - Reusable Gradient Button
+struct GotchaButton: View {
+    let label: String
+    let icon: String
+    var colors: [Color] = [Color(red: 0.50, green: 0.32, blue: 1.00), Color(red: 0.85, green: 0.55, blue: 1.00)]
+    let action: () -> Void
+
     var body: some View {
-        Button(action: {
-            // Social login logic
-        }) {
-            HStack {
-                Image(platform) // Replace with your social logo images
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 24, height: 24)
-                Text(platform)
-                    .foregroundColor(.white)
-                    .font(.headline)
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Text(label)
+                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .semibold))
             }
-            .padding()
+            .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .background(Color.gray)
-            .cornerRadius(10)
+            .frame(height: 56)
+            .background(
+                LinearGradient(colors: colors, startPoint: .leading, endPoint: .trailing)
+            )
+            .clipShape(Capsule())
         }
-        .padding(.horizontal, 20)
+        .buttonStyle(SpringButtonStyle())
     }
 }
 
-struct BottomLeftRoundedCorner: Shape {
-    var radius: CGFloat
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-
-        // Define the corners we want to mask, in this case .bottomLeft
-        let rounded = UIBezierPath(roundedRect: rect, byRoundingCorners: [.bottomLeft], cornerRadii: CGSize(width: radius, height: radius))
-        path.addPath(Path(rounded.cgPath))
-
-        return path
-    }
-}
-
-struct BottomRightRoundedCorner: Shape {
-    var radius: CGFloat
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-
-        // Define the corners we want to mask, in this case .bottomRight
-        let rounded = UIBezierPath(roundedRect: rect, byRoundingCorners: [.bottomRight], cornerRadii: CGSize(width: radius, height: radius))
-        path.addPath(Path(rounded.cgPath))
-
-        return path
-    }
-}
-
-
-struct PageIndicator: View {
-    var currentPage: Int
-    
-    var body: some View {
-        HStack(spacing: 8) {
-            ForEach(0..<3) { index in
-                Circle()
-                    .fill(currentPage == index ? Color.blue : Color.white)
-                    .frame(width: currentPage == index ? 20 : 8, height: 8)
-            }
-        }
-    }
-}
-
-struct OnboardingButtonStyle: ButtonStyle {
+// MARK: - Spring Button Style
+struct SpringButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .foregroundColor(.white)
-            .padding(.horizontal)
-            .padding(.vertical, 12)
-            .background(Color.blue)
-            .cornerRadius(15)
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.spring(response: 0.25, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }
-
-
-// PageControl, SocialLoginButton, and PrimaryButtonStyle remain unchanged.
-// Make sure to replace "onboarding-1" and "onboarding-3" with the actual image names in your asset catalog.
-// Make sure you have the appropriate image and icon assets in your Xcode project.
-
 
 #Preview {
     LoginView()
+        .environmentObject(AppState())
 }

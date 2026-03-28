@@ -1,363 +1,418 @@
+//
+//  MarketplaceView.swift
+//  Gotcha
+//
+//  Created by Nicholas Minieri on 4/28/24.
+//
+
 import SwiftUI
 
-// MARK: - Product Model
-struct Product: Identifiable {
-    let id = UUID()
-    let name: String
-    let price: Double
-    let imageName: String
-    let category: String  // Category to which the product belongs
-    var isFavorite: Bool = false
-
-    static let sampleProducts: [Product] = [
-        Product(name: "T-shirt with Blade Print", price: 469, imageName: "tshirt", category: "Clothing"),
-        Product(name: "Ace High-top Sneakers", price: 739, imageName: "sneakers", category: "Clothing"),
-        Product(name: "Le Marché Watch", price: 1199, imageName: "watch", category: "Electronics"),
-        Product(name: "Oversize Polo", price: 989, imageName: "polo", category: "Clothing")
-        // Add more sample products as needed
-    ]
-}
-
-// MARK: - Search Bar View
-struct SearchBarView: View {
-    @Binding var searchText: String
+// MARK: - Marketplace Root
+struct MarketplaceView: View {
+    @StateObject private var vm = MarketplaceViewModel()
+    @State private var selectedItem: Item?
 
     var body: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.gray)
-                .padding(.leading, 8)
+        NavigationStack {
+            ZStack {
+                Color(red: 0.07, green: 0.07, blue: 0.10)
+                    .ignoresSafeArea()
 
-            TextField("What are you looking for?", text: $searchText)
-                .foregroundColor(.primary)
-                .padding(8)
-                .background(Color(.systemGray6))
-                .cornerRadius(10)
-            
-            if !searchText.isEmpty {
-                Button(action: { self.searchText = "" }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.gray)
-                        .padding(.trailing, 8)
+                Group {
+                    switch vm.selectedTab {
+                    case .explore:
+                        ExploreTab(vm: vm, selectedItem: $selectedItem)
+                    case .favorites:
+                        FavoritesTab(vm: vm, selectedItem: $selectedItem)
+                    case .messages:
+                        MessagesTab()
+                    case .profile:
+                        UserProfileView()
+                    }
                 }
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.18), value: vm.selectedTab)
+            }
+            .safeAreaInset(edge: .bottom) {
+                FloatingTabBar(selectedTab: $vm.selectedTab)
+            }
+            .navigationDestination(item: $selectedItem) { item in
+                ItemDetailView(item: item, vm: vm)
             }
         }
     }
 }
 
-// MARK: - Settings Button
-struct SettingsButton: View {
-    var action: () -> Void
+// MARK: - Floating Tab Bar
+struct FloatingTabBar: View {
+    @Binding var selectedTab: MarketplaceViewModel.Tab
 
     var body: some View {
-        Button(action: action) {
-            Image(systemName: "slider.horizontal.3")
-                .foregroundColor(Color.gray)
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(10)
-        }
-    }
-}
-
-// MARK: - Category Selector
-struct CategorySelector: View {
-    @Binding var selectedCategory: String
-    let categories: [String]
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 16) {
-                ForEach(categories, id: \.self) { category in
-                    CategoryButton(category: category,
-                                   isSelected: selectedCategory == category,
-                                   action: {
-                        self.selectedCategory = category
-                    })
+        HStack(spacing: 0) {
+            ForEach(MarketplaceViewModel.Tab.allCases, id: \.self) { tab in
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.72)) {
+                        selectedTab = tab
+                    }
+                } label: {
+                    VStack(spacing: 5) {
+                        Image(systemName: selectedTab == tab
+                              ? tab.symbols.filled
+                              : tab.symbols.default)
+                            .font(.system(size: 22, weight: .semibold))
+                            .scaleEffect(selectedTab == tab ? 1.10 : 1.0)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: selectedTab)
+                        Text(tab.rawValue)
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                    }
+                    .foregroundColor(
+                        selectedTab == tab
+                        ? Color(red: 0.70, green: 0.52, blue: 1.00)
+                        : Color.white.opacity(0.35)
+                    )
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
                 }
             }
-            .padding(.horizontal)
+        }
+        .padding(.horizontal, 16)
+        .background(.ultraThinMaterial)
+        .overlay(
+            Rectangle()
+                .fill(Color.white.opacity(0.07))
+                .frame(height: 1),
+            alignment: .top
+        )
+    }
+}
+
+// MARK: - Explore Tab
+struct ExploreTab: View {
+    @ObservedObject var vm: MarketplaceViewModel
+    @Binding var selectedItem: Item?
+
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 0) {
+
+                // Header
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Gotcha")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundColor(Color(red: 0.70, green: 0.52, blue: 1.00))
+                        Text("What's for sale?")
+                            .font(.system(size: 26, weight: .black, design: .rounded))
+                            .foregroundColor(.white)
+                    }
+                    Spacer()
+                    Button { } label: {
+                        Image(systemName: "bell")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.white)
+                            .padding(12)
+                            .background(Color.white.opacity(0.08))
+                            .clipShape(Circle())
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                .padding(.bottom, 16)
+
+                // Search bar
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(Color.white.opacity(0.38))
+                        .font(.system(size: 15, weight: .medium))
+                    TextField(
+                        "",
+                        text: $vm.searchText,
+                        prompt: Text("Search listings...")
+                            .foregroundColor(.white.opacity(0.22))
+                    )
+                    .foregroundColor(.white)
+                    .font(.system(size: 15, design: .rounded))
+                    .autocorrectionDisabled()
+                    if !vm.searchText.isEmpty {
+                        Button {
+                            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                vm.searchText = ""
+                            }
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.white.opacity(0.35))
+                        }
+                        .transition(.scale.combined(with: .opacity))
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 13)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.white.opacity(0.08))
+                )
+                .padding(.horizontal, 20)
+                .padding(.bottom, 16)
+
+                // Category chips
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(Item.Category.allCases.filter { $0 != .other }) { category in
+                            CategoryChip(
+                                category: category,
+                                isSelected: vm.selectedCategory == category
+                            ) {
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    vm.selectedCategory = category
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                }
+                .padding(.bottom, 20)
+
+                // Items grid
+                if vm.filteredItems.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 36))
+                            .foregroundColor(.white.opacity(0.15))
+                        Text("No listings found")
+                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .foregroundColor(.white.opacity(0.28))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 60)
+                } else {
+                    LazyVGrid(
+                        columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)],
+                        spacing: 14
+                    ) {
+                        ForEach(vm.filteredItems) { item in
+                            ItemCard(item: vm.currentState(of: item)) {
+                                selectedItem = item
+                            } onFavorite: {
+                                vm.toggleFavorite(item)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                }
+
+                Spacer().frame(height: 100)
+            }
         }
     }
 }
 
-// MARK: - Category Button
-struct CategoryButton: View {
-    let category: String
+// MARK: - Category Chip
+struct CategoryChip: View {
+    let category: Item.Category
     let isSelected: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Text(category)
-                .foregroundColor(isSelected ? Color.orange : Color.primary)
-                .padding(.vertical, 8)
-                .padding(.horizontal, 12)
-                .background(isSelected ? Color.orange.opacity(0.2) : Color.clear)
-                .cornerRadius(15)
+            HStack(spacing: 6) {
+                Image(systemName: category.symbol)
+                    .font(.system(size: 11, weight: .semibold))
+                Text(category.rawValue)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+            }
+            .foregroundColor(isSelected ? .white : .white.opacity(0.45))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 9)
+            .background(
+                Capsule()
+                    .fill(
+                        isSelected
+                        ? AnyShapeStyle(LinearGradient(
+                            colors: category.gradientColors,
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ))
+                        : AnyShapeStyle(Color.white.opacity(0.08))
+                    )
+            )
         }
+        .buttonStyle(SpringButtonStyle())
     }
 }
 
-// MARK: - Product Item View
-struct ProductItemView: View {
-    @Binding var product: Product
+// MARK: - Item Card
+struct ItemCard: View {
+    let item: Item
+    let onTap: () -> Void
+    let onFavorite: () -> Void
+    @State private var heartBouncing = false
 
     var body: some View {
-        VStack(alignment: .leading) {
-            ZStack(alignment: Alignment(horizontal: .trailing, vertical: .top)) {
-                Image(product.imageName)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 150)
-                    .cornerRadius(10)
-                    .clipped()
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 0) {
 
-                Button(action: {
-                    product.isFavorite.toggle()
-                }) {
-                    Image(systemName: product.isFavorite ? "star.fill" : "star")
-                        .foregroundColor(product.isFavorite ? .yellow : .gray)
-                        .padding(10)
-                        .background(Color.white)
-                        .cornerRadius(25)
-                        .shadow(radius: 5)
+                // Visual area — gradient + icon
+                ZStack(alignment: .topTrailing) {
+                    LinearGradient(
+                        colors: item.category.gradientColors,
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .frame(height: 140)
+                    .clipShape(
+                        UnevenRoundedRectangle(
+                            topLeadingRadius: 14,
+                            bottomLeadingRadius: 0,
+                            bottomTrailingRadius: 0,
+                            topTrailingRadius: 14
+                        )
+                    )
+
+                    Image(systemName: item.category.symbol)
+                        .font(.system(size: 48, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.28))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                        .frame(height: 140)
+
+                    // Favorite button
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.45)) {
+                            heartBouncing = true
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            heartBouncing = false
+                        }
+                        onFavorite()
+                    } label: {
+                        Image(systemName: item.isFavorite ? "heart.fill" : "heart")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(item.isFavorite ? Color(red: 1.0, green: 0.3, blue: 0.4) : .white)
+                            .padding(8)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
+                            .scaleEffect(heartBouncing ? 1.35 : 1.0)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(8)
                 }
-            }
 
-            Text("$\(product.price, specifier: "%.2f")")
-                .font(.subheadline)
-                .foregroundColor(.gray)
+                // Info area
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(item.title)
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
 
-            Text(product.name)
-                .font(.headline)
-                .foregroundColor(.primary)
-                .lineLimit(1)
-        }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(12)
-        .shadow(radius: 2)
-    }
-}
+                    Text("\(item.sellerName) · \(item.university)")
+                        .font(.system(size: 11, design: .rounded))
+                        .foregroundColor(.white.opacity(0.38))
+                        .lineLimit(1)
 
-// MARK: - Products Grid
-struct ProductsGrid: View {
-    @Binding var products: [Product]
-
-    var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 20)], spacing: 20) {
-            ForEach($products) { $product in
-                ProductItemView(product: $product)
-            }
-        }
-        .padding(.horizontal)
-    }
-}
-
-// MARK: - Bottom Navigation Bar
-struct BottomNavigationBar: View {
-    @Binding var selectedTab: String
-
-    var body: some View {
-        HStack {
-            // Explore Button
-            Button(action: {
-                self.selectedTab = "Explore"
-            }) {
-                VStack {
-                    Image(systemName: selectedTab == "Explore" ? "house.fill" : "house")
-                        .foregroundColor(selectedTab == "Explore" ? .orange : .gray)
-                    Text("Explore")
-                        .foregroundColor(selectedTab == "Explore" ? .orange : .gray)
-                }
-                .padding()
-                .background(selectedTab == "Explore" ? Color(.systemGray6) : Color.clear)
-                .cornerRadius(10)
-            }
-
-            Spacer()
-
-            // Favorites Button
-            Button(action: {
-                self.selectedTab = "Favorites"
-            }) {
-                VStack {
-                    Image(systemName: selectedTab == "Favorites" ? "star.fill" : "star")
-                        .foregroundColor(selectedTab == "Favorites" ? .orange : .gray)
-                }
-                .padding()
-                .background(selectedTab == "Favorites" ? Color(.systemGray6) : Color.clear)
-                .cornerRadius(10)
-            }
-
-            Spacer()
-
-            // Messages Button
-            Button(action: {
-                self.selectedTab = "Messages"
-            }) {
-                VStack {
-                    Image(systemName: selectedTab == "Messages" ? "message.fill" : "message")
-                        .foregroundColor(selectedTab == "Messages" ? .orange : .gray)
-                }
-                .padding()
-                .background(selectedTab == "Messages" ? Color(.systemGray6) : Color.clear)
-                .cornerRadius(10)
-            }
-
-            Spacer()
-
-            // Profile Button
-            Button(action: {
-                self.selectedTab = "Profile"
-            }) {
-                VStack {
-                    Image(systemName: selectedTab == "Profile" ? "person.fill" : "person")
-                        .foregroundColor(selectedTab == "Profile" ? .orange : .gray)
-                }
-                .padding()
-                .background(selectedTab == "Profile" ? Color(.systemGray6) : Color.clear)
-                .cornerRadius(10)
-            }
-        }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(20)
-        .shadow(radius: 5)
-        .edgesIgnoringSafeArea(.bottom)
-    }
-}
-
-// MARK: - Explore View
-struct ExploreView: View {
-    var body: some View {
-        VStack {
-            Text("Welcome to Explore!")
-                .font(.largeTitle)
-                .padding()
-            Image(systemName: "star.fill")
-                .resizable()
-                .frame(width: 100, height: 100)
-                .foregroundColor(.orange)
-        }
-    }
-}
-
-// MARK: - Messages View
-struct MessagesView: View {
-    var body: some View {
-        VStack {
-            Text("Messages")
-                .font(.largeTitle)
-                .padding()
-            Image(systemName: "message.fill")
-                .resizable()
-                .frame(width: 100, height: 100)
-                .foregroundColor(.blue)
-        }
-    }
-}
-
-// MARK: - Marketplace View
-struct MarketplaceView: View {
-    @State private var searchText: String = ""
-    @State private var selectedCategory: String = "All"
-    @State private var showingSettings = false
-    @State private var selectedTab: String = "Explore"
-
-    @State private var products: [Product] = Product.sampleProducts
-
-    // Sample categories
-    let categories = ["All", "Clothing", "Electronics", "Furniture", "Appliances", "Books"]
-
-    var body: some View {
-        VStack {
-            if selectedTab == "Explore" {
-                // Explore Tab Content
-                VStack {
-                    // Search Bar and Settings Button
-                    HStack {
-                        SearchBarView(searchText: $searchText)
-                        SettingsButton {
-                            showingSettings.toggle()
+                    HStack(alignment: .bottom) {
+                        Text(String(format: "$%.2f", item.price))
+                            .font(.system(size: 16, weight: .black, design: .rounded))
+                            .foregroundColor(.white)
+                        Spacer()
+                        // Condition dot
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(item.condition.color)
+                                .frame(width: 6, height: 6)
+                            Text(item.condition.rawValue)
+                                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                .foregroundColor(item.condition.color)
                         }
                     }
-                    .padding()
-
-                    // Categories Selector
-                    CategorySelector(selectedCategory: $selectedCategory, categories: categories)
-                        .padding(.vertical)
-
-                    // Products Grid
-                    ScrollView {
-                        ProductsGrid(products: productsFiltered)
-                    }
+                    .padding(.top, 2)
                 }
-            } else if selectedTab == "Favorites" {
-                // Favorites Tab Content
-                ScrollView {
-                    ProductsGrid(products: favoriteProducts)
-                }
-                .padding(.top)
-            } else if selectedTab == "Messages" {
-                // Messages Tab Content
-                MessagesView()
-            } else if selectedTab == "Profile" {
-                // Profile Tab Content
-                Text("Profile View")
+                .padding(.horizontal, 11)
+                .padding(.vertical, 11)
             }
-
-            Spacer() // Ensures the BottomNavigationBar stays at the bottom
-
-            // Bottom Navigation Bar
-            BottomNavigationBar(selectedTab: $selectedTab)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color(red: 0.13, green: 0.13, blue: 0.17))
+            )
         }
-        .background(Color.white.edgesIgnoringSafeArea(.all))
-        .sheet(isPresented: $showingSettings) {
-            Text("Settings View") // Placeholder for settings view
-        }
+        .buttonStyle(SpringButtonStyle())
     }
+}
 
-    // Filter products based on the search text and selected category
-    var productsFiltered: Binding<[Product]> {
-        Binding(
-            get: {
-                let filteredByCategory = selectedCategory == "All" ? products : products.filter { $0.category == selectedCategory }
-                if searchText.isEmpty {
-                    return filteredByCategory
+// MARK: - Favorites Tab
+struct FavoritesTab: View {
+    @ObservedObject var vm: MarketplaceViewModel
+    @Binding var selectedItem: Item?
+
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Saved")
+                    .font(.system(size: 28, weight: .black, design: .rounded))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    .padding(.bottom, 20)
+
+                if vm.favoriteItems.isEmpty {
+                    VStack(spacing: 14) {
+                        Image(systemName: "heart.slash")
+                            .font(.system(size: 44))
+                            .foregroundColor(.white.opacity(0.14))
+                        Text("Nothing saved yet")
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.white.opacity(0.28))
+                        Text("Tap the heart on any listing\nto save it here.")
+                            .font(.system(size: 14, design: .rounded))
+                            .foregroundColor(.white.opacity(0.2))
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 80)
                 } else {
-                    return filteredByCategory.filter { $0.name.lowercased().contains(searchText.lowercased()) }
-                }
-            },
-            set: { newProducts in
-                for product in newProducts {
-                    if let index = products.firstIndex(where: { $0.id == product.id }) {
-                        products[index] = product
+                    LazyVGrid(
+                        columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)],
+                        spacing: 14
+                    ) {
+                        ForEach(vm.favoriteItems) { item in
+                            ItemCard(item: vm.currentState(of: item)) {
+                                selectedItem = item
+                            } onFavorite: {
+                                vm.toggleFavorite(item)
+                            }
+                        }
                     }
+                    .padding(.horizontal, 20)
                 }
-            }
-        )
-    }
 
-    // Get the favorite products
-    var favoriteProducts: Binding<[Product]> {
-        Binding(
-            get: { products.filter { $0.isFavorite } },
-            set: { newFavorites in
-                for product in newFavorites {
-                    if let index = products.firstIndex(where: { $0.id == product.id }) {
-                        products[index].isFavorite = product.isFavorite
-                    }
-                }
+                Spacer().frame(height: 100)
             }
-        )
+        }
+    }
+}
+
+// MARK: - Messages Tab
+struct MessagesTab: View {
+    var body: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "bubble.left.and.bubble.right.fill")
+                .font(.system(size: 52))
+                .foregroundColor(.white.opacity(0.12))
+            Text("Messages")
+                .font(.system(size: 24, weight: .black, design: .rounded))
+                .foregroundColor(.white)
+            Text("Chat with buyers and sellers\nis coming soon.")
+                .font(.system(size: 15, design: .rounded))
+                .foregroundColor(.white.opacity(0.38))
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
 // MARK: - Preview
-struct MarketplaceView_Previews: PreviewProvider {
-    static var previews: some View {
-        MarketplaceView()
-    }
+#Preview {
+    MarketplaceView()
+        .environmentObject(AppState())
 }
