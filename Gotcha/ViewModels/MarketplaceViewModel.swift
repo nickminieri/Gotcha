@@ -1,0 +1,58 @@
+//
+//  MarketplaceViewModel.swift
+//  Gotcha
+//
+//  Created by Nicholas Minieri on 4/28/24.
+//
+
+import Foundation
+import UIKit
+import Combine
+
+class MarketplaceViewModel: ObservableObject {
+    @Published var items: [Item] = Item.sampleItems
+    @Published var searchText: String = ""
+    @Published var selectedCategory: Item.Category = .all
+    @Published var selectedTab: Tab = .explore
+
+    // MARK: - Tab Definition
+    enum Tab: String, CaseIterable {
+        case explore   = "Explore"
+        case favorites = "Favorites"
+        case messages  = "Messages"
+        case profile   = "Profile"
+
+        var symbols: (default: String, filled: String) {
+            switch self {
+            case .explore:   return ("house",            "house.fill")
+            case .favorites: return ("heart",            "heart.fill")
+            case .messages:  return ("bubble.left",      "bubble.left.fill")
+            case .profile:   return ("person.circle",    "person.circle.fill")
+            }
+        }
+    }
+
+    // MARK: - Computed
+    var filteredItems: [Item] {
+        let byCategory = selectedCategory == .all
+            ? items
+            : items.filter { $0.category == selectedCategory }
+        guard !searchText.isEmpty else { return byCategory }
+        return byCategory.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+    }
+
+    var favoriteItems: [Item] {
+        items.filter { $0.isFavorite }
+    }
+
+    // MARK: - Actions
+    func toggleFavorite(_ item: Item) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        items[index].isFavorite.toggle()
+    }
+
+    func currentState(of item: Item) -> Item {
+        items.first(where: { $0.id == item.id }) ?? item
+    }
+}
