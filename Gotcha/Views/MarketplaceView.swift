@@ -27,7 +27,7 @@ struct MarketplaceView: View {
                     case .messages:
                         MessagesTab()
                     case .profile:
-                        UserProfileView()
+                        UserProfileView(vm: vm)
                     }
                 }
                 .transition(.opacity)
@@ -38,6 +38,9 @@ struct MarketplaceView: View {
             }
             .navigationDestination(item: $selectedItem) { item in
                 ItemDetailView(item: item, vm: vm)
+            }
+            .sheet(isPresented: $vm.isPresentingCreateListing) {
+                CreateListingView(vm: vm)
             }
         }
     }
@@ -107,13 +110,34 @@ struct ExploreTab: View {
                             .foregroundColor(.white)
                     }
                     Spacer()
-                    Button { } label: {
-                        Image(systemName: "bell")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.white)
-                            .padding(12)
-                            .background(Color.white.opacity(0.08))
-                            .clipShape(Circle())
+                    HStack(spacing: 10) {
+                        Button { } label: {
+                            Image(systemName: "bell")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(12)
+                                .background(Color.white.opacity(0.08))
+                                .clipShape(Circle())
+                        }
+                        Button {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            vm.isPresentingCreateListing = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(12)
+                                .background(
+                                    LinearGradient(
+                                        colors: [Color(red: 0.50, green: 0.32, blue: 1.00),
+                                                 Color(red: 0.85, green: 0.55, blue: 1.00)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .clipShape(Circle())
+                        }
+                        .buttonStyle(SpringButtonStyle())
                     }
                 }
                 .padding(.horizontal, 20)

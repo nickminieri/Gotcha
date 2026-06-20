@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct UserProfileView: View {
+    @ObservedObject var vm: MarketplaceViewModel
     @EnvironmentObject var appState: AppState
-    private let user = User.preview
+    private var user: User { vm.currentUser }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -58,6 +59,7 @@ struct UserProfileView: View {
                 // Stats row
                 HStack(spacing: 0) {
                     ProfileStat(value: "\(user.listedCount)", label: "Listed")
+                        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: user.listedCount)
                     Rectangle()
                         .fill(Color.white.opacity(0.08))
                         .frame(width: 1, height: 36)
@@ -73,13 +75,31 @@ struct UserProfileView: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 28)
 
+                // My Listings
+                if !vm.myListings.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("My Listings")
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        ForEach(vm.myListings) { item in
+                            MyListingRow(item: item)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 28)
+                }
+
                 // Menu
                 VStack(spacing: 10) {
                     ProfileMenuItem(
                         icon: "plus.circle.fill",
                         label: "List an Item",
                         color: Color(red: 0.50, green: 0.32, blue: 1.00)
-                    )
+                    ) {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        vm.isPresentingCreateListing = true
+                    }
                     ProfileMenuItem(
                         icon: "clock.arrow.circlepath",
                         label: "Purchase History",
@@ -147,9 +167,10 @@ struct ProfileMenuItem: View {
     let icon: String
     let label: String
     let color: Color
+    var action: () -> Void = {}
 
     var body: some View {
-        Button { } label: {
+        Button(action: action) {
             HStack(spacing: 14) {
                 Image(systemName: icon)
                     .font(.system(size: 16, weight: .semibold))
@@ -174,8 +195,49 @@ struct ProfileMenuItem: View {
     }
 }
 
+// MARK: - My Listing Row
+struct MyListingRow: View {
+    let item: Item
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                LinearGradient(
+                    colors: item.category.gradientColors,
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                Image(systemName: item.category.symbol)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.3))
+            }
+            .frame(width: 56, height: 56)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(item.title)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                Text(item.category.rawValue)
+                    .font(.system(size: 12, design: .rounded))
+                    .foregroundColor(.white.opacity(0.38))
+            }
+            Spacer()
+            Text(String(format: "$%.2f", item.price))
+                .font(.system(size: 15, weight: .black, design: .rounded))
+                .foregroundColor(.white)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.white.opacity(0.06))
+        )
+    }
+}
+
 #Preview {
-    UserProfileView()
+    UserProfileView(vm: MarketplaceViewModel())
         .environmentObject(AppState())
         .background(Color(red: 0.07, green: 0.07, blue: 0.10))
 }
