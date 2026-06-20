@@ -65,17 +65,46 @@ struct UserProfileView: View {
                         }
                     }
 
-                    Button {
-                        showEditProfile = true
-                    } label: {
-                        Text("Edit Profile")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 8)
-                            .background(Capsule().fill(Color.white.opacity(0.1)))
+                    // Trust badges
+                    HStack(spacing: 8) {
+                        if user.isStudentVerified { TrustBadge(kind: .student) }
+                        if user.isIdVerified { TrustBadge(kind: .id) }
                     }
-                    .buttonStyle(SpringButtonStyle())
+                    .padding(.top, 2)
+
+                    HStack(spacing: 10) {
+                        Button {
+                            showEditProfile = true
+                        } label: {
+                            Text("Edit Profile")
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 18)
+                                .padding(.vertical, 8)
+                                .background(Capsule().fill(Color.white.opacity(0.1)))
+                        }
+                        .buttonStyle(SpringButtonStyle())
+
+                        if !user.isIdVerified {
+                            Button {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                    vm.verifyIdentity()
+                                }
+                            } label: {
+                                HStack(spacing: 5) {
+                                    Image(systemName: "person.badge.shield.checkmark")
+                                        .font(.system(size: 12, weight: .bold))
+                                    Text("Verify ID")
+                                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Capsule().fill(Theme.accentGradient))
+                            }
+                            .buttonStyle(SpringButtonStyle())
+                        }
+                    }
                 }
                 .padding(.bottom, 28)
 

@@ -13,6 +13,7 @@ struct ItemDetailView: View {
     let onMessage: (Item) -> Void
     var onSeller: (SellerRef) -> Void = { _ in }
     @Environment(\.dismiss) private var dismiss
+    @State private var showReport = false
 
     // Always reflects latest favorite state from the VM
     private var current: Item { vm.currentState(of: item) }
@@ -57,16 +58,35 @@ struct ItemDetailView: View {
                                     .clipShape(Circle())
                             }
                             Spacer()
-                            Button {
-                                vm.toggleFavorite(item)
-                            } label: {
-                                Image(systemName: current.isFavorite ? "heart.fill" : "heart")
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(current.isFavorite ? Color(red: 1.0, green: 0.3, blue: 0.4) : .white)
-                                    .padding(12)
-                                    .background(.ultraThinMaterial)
-                                    .clipShape(Circle())
-                                    .animation(.spring(response: 0.3, dampingFraction: 0.5), value: current.isFavorite)
+                            HStack(spacing: 10) {
+                                Button {
+                                    vm.toggleFavorite(item)
+                                } label: {
+                                    Image(systemName: current.isFavorite ? "heart.fill" : "heart")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(current.isFavorite ? Color(red: 1.0, green: 0.3, blue: 0.4) : .white)
+                                        .padding(12)
+                                        .background(.ultraThinMaterial)
+                                        .clipShape(Circle())
+                                        .animation(.spring(response: 0.3, dampingFraction: 0.5), value: current.isFavorite)
+                                }
+                                Menu {
+                                    Button(role: .destructive) { showReport = true } label: {
+                                        Label("Report listing", systemImage: "flag")
+                                    }
+                                    Button(role: .destructive) {
+                                        vm.block(item.sellerName); dismiss()
+                                    } label: {
+                                        Label("Block \(item.sellerName)", systemImage: "hand.raised")
+                                    }
+                                } label: {
+                                    Image(systemName: "ellipsis")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .padding(12)
+                                        .background(.ultraThinMaterial)
+                                        .clipShape(Circle())
+                                }
                             }
                         }
                         .padding(.horizontal, 20)
@@ -156,10 +176,13 @@ struct ItemDetailView: View {
                                         .foregroundColor(.white)
                                 }
 
-                                VStack(alignment: .leading, spacing: 3) {
-                                    Text(item.sellerName)
-                                        .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                        .foregroundColor(.white)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack(spacing: 6) {
+                                        Text(item.sellerName)
+                                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                            .foregroundColor(.white)
+                                        TrustBadge(kind: .student, compact: true)
+                                    }
                                     if let avg = vm.averageRating(for: item.sellerName) {
                                         HStack(spacing: 5) {
                                             StarsView(rating: avg, size: 11)
@@ -249,6 +272,12 @@ struct ItemDetailView: View {
             }
         }
         .navigationBarHidden(true)
+        .sheet(isPresented: $showReport) {
+            ReportSheet(subjectName: item.sellerName) { reason in
+                vm.report(sellerName: item.sellerName, reason: reason)
+                dismiss()
+            }
+        }
     }
 }
 

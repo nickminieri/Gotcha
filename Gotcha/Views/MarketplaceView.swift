@@ -47,7 +47,7 @@ struct MarketplaceView: View {
                 })
             }
             .navigationDestination(for: Conversation.self) { convo in
-                ConversationView(conversationID: convo.id, messaging: messaging)
+                ConversationView(conversationID: convo.id, messaging: messaging, vm: vm)
             }
             .navigationDestination(for: SellerRef.self) { seller in
                 SellerProfileView(seller: seller, vm: vm)

@@ -36,8 +36,13 @@ class MessagingViewModel: ObservableObject {
                                 date: Date(timeIntervalSinceNow: -3600)),
                         Message(text: "Yes it is! Barely used, comes with the box.", isFromMe: false,
                                 date: Date(timeIntervalSinceNow: -3400)),
-                        Message(text: "Could you do $850?", isFromMe: true,
-                                date: Date(timeIntervalSinceNow: -1800))
+                        Message(text: "Offer", isFromMe: true, date: Date(timeIntervalSinceNow: -1800),
+                                kind: .offer, offerAmount: 850, offerStatus: .accepted),
+                        Message(text: "Chris L. accepted your offer of $850.00 🎉", isFromMe: false,
+                                date: Date(timeIntervalSinceNow: -1700), kind: .system),
+                        Message(text: "Meetup", isFromMe: true, date: Date(timeIntervalSinceNow: -1500),
+                                kind: .meetup, meetupSpot: "Campus Police Station",
+                                meetupDate: Date(timeIntervalSinceNow: 86400))
                     ]
                 ),
                 Conversation(
@@ -124,6 +129,55 @@ class MessagingViewModel: ObservableObject {
         conversations[index].messages.append(Message(text: trimmed, isFromMe: true))
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         scheduleAutoReply(for: id)
+    }
+
+    /// Sends a price offer; the seller auto-accepts shortly after (simulated).
+    func sendOffer(_ amount: Double, to id: UUID) {
+        guard amount > 0, let index = conversations.firstIndex(where: { $0.id == id }) else { return }
+        let offer = Message(
+            text: "Offer",
+            isFromMe: true,
+            kind: .offer,
+            offerAmount: amount,
+            offerStatus: .pending
+        )
+        let offerID = offer.id
+        conversations[index].messages.append(offer)
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+
+        let sellerName = conversations[index].sellerName
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { [weak self] in
+            guard let self,
+                  let cIndex = self.conversations.firstIndex(where: { $0.id == id }),
+                  let mIndex = self.conversations[cIndex].messages.firstIndex(where: { $0.id == offerID })
+            else { return }
+            self.conversations[cIndex].messages[mIndex].offerStatus = .accepted
+            self.conversations[cIndex].messages.append(
+                Message(text: "\(sellerName) accepted your offer of \(Self.priceString(amount)) 🎉",
+                        isFromMe: false, kind: .system)
+            )
+            if self.activeConversationID != id { self.conversations[cIndex].unreadCount += 1 }
+        }
+    }
+
+    /// Proposes a safe campus meetup; the seller confirms shortly after.
+    func scheduleMeetup(spot: String, date: Date, to id: UUID) {
+        guard let index = conversations.firstIndex(where: { $0.id == id }) else { return }
+        conversations[index].messages.append(
+            Message(text: "Meetup", isFromMe: true, kind: .meetup, meetupSpot: spot, meetupDate: date)
+        )
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) { [weak self] in
+            guard let self, let cIndex = self.conversations.firstIndex(where: { $0.id == id }) else { return }
+            self.conversations[cIndex].messages.append(
+                Message(text: "Sounds good — see you at \(spot)! 👍", isFromMe: false)
+            )
+            if self.activeConversationID != id { self.conversations[cIndex].unreadCount += 1 }
+        }
+    }
+
+    static func priceString(_ amount: Double) -> String {
+        String(format: "$%.2f", amount)
     }
 
     /// A lightweight canned seller reply so threads feel alive in the demo.

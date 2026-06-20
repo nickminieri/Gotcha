@@ -195,7 +195,12 @@ struct LoginFormPage: View {
 
     private enum LoginField { case email, password }
 
-    private var canSubmit: Bool { !email.isEmpty && !password.isEmpty && !isLoading }
+    private var isCampusEmail: Bool {
+        let e = email.trimmingCharacters(in: .whitespaces).lowercased()
+        return e.contains("@") && e.hasSuffix(".edu")
+    }
+    private var showEmailHint: Bool { !email.isEmpty && !isCampusEmail }
+    private var canSubmit: Bool { isCampusEmail && !password.isEmpty && !isLoading }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -224,6 +229,15 @@ struct LoginFormPage: View {
                     .autocapitalization(.none)
                     .autocorrectionDisabled()
                     .focused($focusedField, equals: .email)
+
+                    if showEmailHint {
+                        Label("Use your .edu student email — Gotcha is students-only.", systemImage: "info.circle")
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundColor(Color(red: 1.0, green: 0.65, blue: 0.25))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.leading, 4)
+                            .transition(.opacity)
+                    }
 
                     // Password field (custom to support visibility toggle)
                     VStack(alignment: .leading, spacing: 6) {

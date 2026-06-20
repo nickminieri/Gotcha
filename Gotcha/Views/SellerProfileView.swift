@@ -12,6 +12,7 @@ struct SellerProfileView: View {
     @ObservedObject var vm: MarketplaceViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showWriteReview = false
+    @State private var showReport = false
 
     private var sellerReviews: [Review] { vm.reviews(for: seller.name) }
     private var average: Double? { vm.averageRating(for: seller.name) }
@@ -59,11 +60,33 @@ struct SellerProfileView: View {
                         .foregroundColor(.white)
                 }
             }
+            if !isSelf {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button(role: .destructive) { showReport = true } label: {
+                            Label("Report", systemImage: "flag")
+                        }
+                        Button(role: .destructive) { vm.block(seller.name); dismiss() } label: {
+                            Label("Block", systemImage: "hand.raised")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                }
+            }
         }
         .toolbarBackground(Theme.bg, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .sheet(isPresented: $showWriteReview) {
             WriteReviewView(seller: seller, vm: vm)
+        }
+        .sheet(isPresented: $showReport) {
+            ReportSheet(subjectName: seller.name) { reason in
+                vm.report(sellerName: seller.name, reason: reason)
+                dismiss()
+            }
         }
     }
 
@@ -94,6 +117,8 @@ struct SellerProfileView: View {
                         .font(.system(size: 14, design: .rounded))
                         .foregroundColor(.white.opacity(0.45))
                 }
+                TrustBadge(kind: .student)
+                    .padding(.top, 2)
             }
 
             // Rating summary

@@ -18,6 +18,10 @@ struct User: Identifiable, Codable {
     var listedCount: Int
     /// Filename of the user's avatar photo in `ImageStore`, if any.
     var avatarFilename: String?
+    /// Verified via a campus (.edu) email — the baseline student-only trust signal.
+    var isStudentVerified: Bool
+    /// Optional higher-trust tier (ID + selfie), simulated in this prototype.
+    var isIdVerified: Bool
 
     init(
         id: UUID = UUID(),
@@ -28,7 +32,9 @@ struct User: Identifiable, Codable {
         rating: Double = 0.0,
         reviewCount: Int = 0,
         listedCount: Int = 0,
-        avatarFilename: String? = nil
+        avatarFilename: String? = nil,
+        isStudentVerified: Bool = true,
+        isIdVerified: Bool = false
     ) {
         self.id = id
         self.name = name
@@ -39,6 +45,8 @@ struct User: Identifiable, Codable {
         self.reviewCount = reviewCount
         self.listedCount = listedCount
         self.avatarFilename = avatarFilename
+        self.isStudentVerified = isStudentVerified
+        self.isIdVerified = isIdVerified
     }
 
     static let preview = User(
@@ -90,7 +98,8 @@ struct User: Identifiable, Codable {
             university: university,
             rating: 5.0,
             reviewCount: 0,
-            listedCount: 0
+            listedCount: 0,
+            isStudentVerified: domain.hasSuffix(".edu")
         )
     }
 }

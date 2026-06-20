@@ -28,6 +28,9 @@ class MarketplaceViewModel: ObservableObject {
     @Published var reviews: [Review] = [] {
         didSet { persistReviewsIfNeeded() }
     }
+    @Published var blockedSellers: Set<String> = [] {
+        didSet { persistBlockedIfNeeded() }
+    }
     /// True when a saved profile was loaded, so we don't overwrite it from email.
     private(set) var hasStoredProfile = false
 
@@ -36,6 +39,7 @@ class MarketplaceViewModel: ObservableObject {
     private static let itemsKey = "gotcha.items.v1"
     private static let userKey = "gotcha.user.v1"
     private static let reviewsKey = "gotcha.reviews.v1"
+    private static let blockedKey = "gotcha.blocked.v1"
 
     init() {
         #if DEBUG
@@ -74,6 +78,7 @@ class MarketplaceViewModel: ObservableObject {
             loadItems()
             loadUser()
             loadReviews()
+            loadBlocked()
         }
         if let i = args.firstIndex(of: "-uiAddTestListing"), i + 1 < args.count {
             addListing(title: args[i + 1], description: "Added by UI hook.", price: 42.00, category: .other, condition: .good)
@@ -89,6 +94,7 @@ class MarketplaceViewModel: ObservableObject {
         loadItems()
         loadUser()
         loadReviews()
+        loadBlocked()
         #endif
     }
 
@@ -131,6 +137,9 @@ class MarketplaceViewModel: ObservableObject {
         var result = selectedCategory == .all
             ? items
             : items.filter { $0.category == selectedCategory }
+        if !blockedSellers.isEmpty {
+            result = result.filter { !blockedSellers.contains($0.sellerName) }
+        }
         if !searchText.isEmpty {
             result = result.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
         }
@@ -307,6 +316,30 @@ class MarketplaceViewModel: ObservableObject {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
+    // MARK: - Trust & Safety
+    func isBlocked(_ sellerName: String) -> Bool { blockedSellers.contains(sellerName) }
+
+    func block(_ sellerName: String) {
+        blockedSellers.insert(sellerName)
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
+    }
+
+    func unblock(_ sellerName: String) {
+        blockedSellers.remove(sellerName)
+    }
+
+    /// Records a report. In a shipping app this would notify trust & safety /
+    /// university administration; here it acknowledges and blocks the seller.
+    func report(sellerName: String, reason: String) {
+        block(sellerName)
+    }
+
+    /// Simulated ID + selfie verification, granting the higher trust tier.
+    func verifyIdentity() {
+        currentUser.isIdVerified = true
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+
     // MARK: - Persistence
     /// Loads saved listings from disk, falling back to the bundled samples on
     /// first launch or if decoding fails.
@@ -347,6 +380,18 @@ class MarketplaceViewModel: ObservableObject {
         guard persistenceEnabled else { return }
         guard let data = try? JSONEncoder().encode(reviews) else { return }
         UserDefaults.standard.set(data, forKey: Self.reviewsKey)
+    }
+
+    private func loadBlocked() {
+        guard let data = UserDefaults.standard.data(forKey: Self.blockedKey),
+              let saved = try? JSONDecoder().decode(Set<String>.self, from: data) else { return }
+        blockedSellers = saved
+    }
+
+    private func persistBlockedIfNeeded() {
+        guard persistenceEnabled else { return }
+        guard let data = try? JSONEncoder().encode(blockedSellers) else { return }
+        UserDefaults.standard.set(data, forKey: Self.blockedKey)
     }
 
     #if DEBUG

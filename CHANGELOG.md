@@ -4,6 +4,14 @@ A running log of notable changes to Gotcha.
 
 ## [Unreleased]
 
+### Added
+- **Research-driven trust & safety suite** (see `RESEARCH.md`): `.edu`-gated
+  login with **Student Verified** / **ID Verified** trust badges across the app;
+  **report & block** flows (listings, sellers, conversations) that hide blocked
+  sellers; a chat **safety banner**; in-chat **Make an Offer** (accept/decline)
+  and **Schedule Safe Meetup** at curated campus spots, rendered as offer/meetup
+  cards in the conversation.
+
 ### Changed
 - **Premium UI redesign**: introduced a central `Theme` design system (layered
   near-black surfaces, a single violet accent + gradient, text/hairline tokens)
