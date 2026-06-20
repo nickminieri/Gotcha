@@ -5,6 +5,14 @@ A running log of notable changes to Gotcha.
 ## [Unreleased]
 
 ### Added
+- **Messaging**: a real (local, persisted) messaging system replaces the
+  "coming soon" placeholders. The Messages tab lists conversations (seller,
+  item, last message, time); tapping opens a chat thread with bubbles and a
+  send bar. "Message Seller" on a listing opens/creates that conversation.
+  Sending a message gets a lightweight canned seller auto-reply. Conversations
+  are saved to `UserDefaults` (`MessagingViewModel`, `Conversation`/`Message`).
+- Navigation moved to a `NavigationPath`, so listings and conversations push
+  consistently from any tab.
 - **Listing photos via PhotosPicker**: pick a photo when creating or editing a
   listing. Images are downscaled/JPEG-compressed and stored on disk in an
   `ImageStore` (only the filename is saved in the listing), then shown on cards,

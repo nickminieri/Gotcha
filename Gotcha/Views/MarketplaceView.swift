@@ -11,11 +11,12 @@ import SwiftUI
 struct MarketplaceView: View {
     @EnvironmentObject private var appState: AppState
     @StateObject private var vm = MarketplaceViewModel()
-    @State private var selectedItem: Item?
+    @StateObject private var messaging = MessagingViewModel()
+    @State private var path = NavigationPath()
     @State private var didConfigureUser = false
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ZStack {
                 Color(red: 0.07, green: 0.07, blue: 0.10)
                     .ignoresSafeArea()
@@ -23,11 +24,11 @@ struct MarketplaceView: View {
                 Group {
                     switch vm.selectedTab {
                     case .explore:
-                        ExploreTab(vm: vm, selectedItem: $selectedItem)
+                        ExploreTab(vm: vm) { path.append($0) }
                     case .favorites:
-                        FavoritesTab(vm: vm, selectedItem: $selectedItem)
+                        FavoritesTab(vm: vm) { path.append($0) }
                     case .messages:
-                        MessagesTab()
+                        MessagesTab(messaging: messaging) { path.append($0) }
                     case .profile:
                         UserProfileView(vm: vm)
                     }
@@ -38,8 +39,13 @@ struct MarketplaceView: View {
             .safeAreaInset(edge: .bottom) {
                 FloatingTabBar(selectedTab: $vm.selectedTab)
             }
-            .navigationDestination(item: $selectedItem) { item in
-                ItemDetailView(item: item, vm: vm)
+            .navigationDestination(for: Item.self) { item in
+                ItemDetailView(item: item, vm: vm) { selected in
+                    path.append(messaging.openConversationValue(for: selected))
+                }
+            }
+            .navigationDestination(for: Conversation.self) { convo in
+                ConversationView(conversationID: convo.id, messaging: messaging)
             }
             .sheet(isPresented: $vm.isPresentingCreateListing) {
                 CreateListingView(vm: vm)
@@ -55,6 +61,12 @@ struct MarketplaceView: View {
             if let email = appState.signedInEmail, !email.isEmpty {
                 vm.currentUser = User.fromCampusEmail(email)
             }
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("-uiOpenFirstConversation"),
+               let first = messaging.sortedConversations.first {
+                path.append(first)
+            }
+            #endif
         }
     }
 }
@@ -106,7 +118,7 @@ struct FloatingTabBar: View {
 // MARK: - Explore Tab
 struct ExploreTab: View {
     @ObservedObject var vm: MarketplaceViewModel
-    @Binding var selectedItem: Item?
+    let onSelect: (Item) -> Void
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -260,7 +272,7 @@ struct ExploreTab: View {
                     ) {
                         ForEach(vm.filteredItems) { item in
                             ItemCard(item: vm.currentState(of: item)) {
-                                selectedItem = item
+                                onSelect(item)
                             } onFavorite: {
                                 vm.toggleFavorite(item)
                             }
@@ -401,7 +413,7 @@ struct ItemCard: View {
 // MARK: - Favorites Tab
 struct FavoritesTab: View {
     @ObservedObject var vm: MarketplaceViewModel
-    @Binding var selectedItem: Item?
+    let onSelect: (Item) -> Void
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -435,7 +447,7 @@ struct FavoritesTab: View {
                     ) {
                         ForEach(vm.favoriteItems) { item in
                             ItemCard(item: vm.currentState(of: item)) {
-                                selectedItem = item
+                                onSelect(item)
                             } onFavorite: {
                                 vm.toggleFavorite(item)
                             }
@@ -447,25 +459,6 @@ struct FavoritesTab: View {
                 Spacer().frame(height: 100)
             }
         }
-    }
-}
-
-// MARK: - Messages Tab
-struct MessagesTab: View {
-    var body: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "bubble.left.and.bubble.right.fill")
-                .font(.system(size: 52))
-                .foregroundColor(.white.opacity(0.12))
-            Text("Messages")
-                .font(.system(size: 24, weight: .black, design: .rounded))
-                .foregroundColor(.white)
-            Text("Chat with buyers and sellers\nis coming soon.")
-                .font(.system(size: 15, design: .rounded))
-                .foregroundColor(.white.opacity(0.38))
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

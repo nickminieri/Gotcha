@@ -10,8 +10,8 @@ import SwiftUI
 struct ItemDetailView: View {
     let item: Item
     @ObservedObject var vm: MarketplaceViewModel
+    let onMessage: (Item) -> Void
     @Environment(\.dismiss) private var dismiss
-    @State private var showMessageSheet = false
 
     // Always reflects latest favorite state from the VM
     private var current: Item { vm.currentState(of: item) }
@@ -187,7 +187,7 @@ struct ItemDetailView: View {
                     }
                     Button {
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        showMessageSheet = true
+                        onMessage(item)
                     } label: {
                         Text("Message Seller")
                             .font(.system(size: 17, weight: .semibold, design: .rounded))
@@ -213,62 +213,12 @@ struct ItemDetailView: View {
             }
         }
         .navigationBarHidden(true)
-        .sheet(isPresented: $showMessageSheet) {
-            MessageComingSoonSheet()
-        }
-    }
-}
-
-// MARK: - Message Coming Soon Sheet
-struct MessageComingSoonSheet: View {
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        VStack(spacing: 20) {
-            Capsule()
-                .fill(Color.white.opacity(0.2))
-                .frame(width: 36, height: 5)
-                .padding(.top, 12)
-
-            Image(systemName: "bubble.left.and.bubble.right.fill")
-                .font(.system(size: 44))
-                .foregroundColor(Color(red: 0.70, green: 0.52, blue: 1.00))
-                .padding(.top, 8)
-
-            Text("Messaging Coming Soon")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundColor(.white)
-
-            Text("Direct messaging with sellers\nwill be available in a future update.")
-                .font(.system(size: 15, design: .rounded))
-                .foregroundColor(.white.opacity(0.45))
-                .multilineTextAlignment(.center)
-
-            Button {
-                dismiss()
-            } label: {
-                Text("Got it")
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(Color.white.opacity(0.1))
-                    .clipShape(Capsule())
-            }
-            .padding(.horizontal, 32)
-            .padding(.top, 8)
-        }
-        .padding(.horizontal, 24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(red: 0.09, green: 0.09, blue: 0.13))
-        .presentationDetents([.height(360)])
-        .presentationCornerRadius(28)
     }
 }
 
 #Preview {
     NavigationStack {
-        ItemDetailView(item: Item.sampleItems[0], vm: MarketplaceViewModel())
+        ItemDetailView(item: Item.sampleItems[0], vm: MarketplaceViewModel()) { _ in }
     }
     .environmentObject(AppState())
 }
