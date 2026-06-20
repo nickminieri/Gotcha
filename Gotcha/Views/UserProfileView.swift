@@ -227,18 +227,9 @@ struct MyListingRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            ZStack {
-                LinearGradient(
-                    colors: item.category.gradientColors,
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                Image(systemName: item.category.symbol)
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.3))
-            }
-            .frame(width: 56, height: 56)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            ListingImage(item: item, symbolSize: 22)
+                .frame(width: 56, height: 56)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(item.title)

@@ -24,21 +24,13 @@ struct ItemDetailView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
 
-                    // Hero gradient area
+                    // Hero photo / gradient area
                     ZStack(alignment: .top) {
-                        LinearGradient(
-                            colors: item.category.gradientColors,
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        .frame(height: 320)
-                        .ignoresSafeArea(edges: .top)
-
-                        Image(systemName: item.category.symbol)
-                            .font(.system(size: 110, weight: .semibold))
-                            .foregroundColor(.white.opacity(0.22))
+                        ListingImage(item: item, symbolSize: 110)
                             .frame(maxWidth: .infinity)
                             .frame(height: 320)
+                            .clipped()
+                            .ignoresSafeArea(edges: .top)
 
                         // Back + favorite row
                         HStack {

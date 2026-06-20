@@ -320,28 +320,19 @@ struct ItemCard: View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 0) {
 
-                // Visual area — gradient + icon
+                // Visual area — photo or gradient + icon
                 ZStack(alignment: .topTrailing) {
-                    LinearGradient(
-                        colors: item.category.gradientColors,
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    .frame(height: 140)
-                    .clipShape(
-                        UnevenRoundedRectangle(
-                            topLeadingRadius: 14,
-                            bottomLeadingRadius: 0,
-                            bottomTrailingRadius: 0,
-                            topTrailingRadius: 14
-                        )
-                    )
-
-                    Image(systemName: item.category.symbol)
-                        .font(.system(size: 48, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.28))
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    ListingImage(item: item, symbolSize: 48)
+                        .frame(maxWidth: .infinity)
                         .frame(height: 140)
+                        .clipShape(
+                            UnevenRoundedRectangle(
+                                topLeadingRadius: 14,
+                                bottomLeadingRadius: 0,
+                                bottomTrailingRadius: 0,
+                                topTrailingRadius: 14
+                            )
+                        )
 
                     // Favorite button
                     Button {

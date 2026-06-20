@@ -18,6 +18,8 @@ struct Item: Identifiable, Codable {
     var university: String
     var isFavorite: Bool
     var postedDate: Date
+    /// Filename of the user-supplied photo in `ImageStore`, if any.
+    var imageFilename: String?
 
     init(
         id: UUID = UUID(),
@@ -29,7 +31,8 @@ struct Item: Identifiable, Codable {
         sellerName: String = "Anonymous",
         university: String = "",
         isFavorite: Bool = false,
-        postedDate: Date = Date()
+        postedDate: Date = Date(),
+        imageFilename: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -41,6 +44,7 @@ struct Item: Identifiable, Codable {
         self.university = university
         self.isFavorite = isFavorite
         self.postedDate = postedDate
+        self.imageFilename = imageFilename
     }
 
     // MARK: - Category

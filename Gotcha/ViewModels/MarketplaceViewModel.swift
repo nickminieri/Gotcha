@@ -41,6 +41,13 @@ class MarketplaceViewModel: ObservableObject {
             ]
             items.insert(contentsOf: mine, at: 0)
             currentUser.listedCount = mine.count
+            // Attach rendered sample photos so image rendering is visible in runs.
+            if let d = Self.debugSamplePhoto("Desk Chair", [.systemIndigo, .systemTeal]) {
+                items[0].imageFilename = ImageStore.shared.save(d)
+            }
+            if let d = Self.debugSamplePhoto("AirPods Pro", [.black, .systemGray]) {
+                items[1].imageFilename = ImageStore.shared.save(d)
+            }
         } else {
             loadItems()
         }
@@ -137,7 +144,8 @@ class MarketplaceViewModel: ObservableObject {
         description: String,
         price: Double,
         category: Item.Category,
-        condition: Item.Condition
+        condition: Item.Condition,
+        imageData: Data? = nil
     ) {
         let item = Item(
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -146,7 +154,8 @@ class MarketplaceViewModel: ObservableObject {
             category: category,
             condition: condition,
             sellerName: currentUser.name,
-            university: currentUser.university
+            university: currentUser.university,
+            imageFilename: imageData.flatMap { ImageStore.shared.save($0) }
         )
         items.insert(item, at: 0)
         currentUser.listedCount += 1
@@ -160,7 +169,8 @@ class MarketplaceViewModel: ObservableObject {
         description: String,
         price: Double,
         category: Item.Category,
-        condition: Item.Condition
+        condition: Item.Condition,
+        imageData: Data? = nil
     ) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         items[index].title = title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -168,12 +178,18 @@ class MarketplaceViewModel: ObservableObject {
         items[index].price = price
         items[index].category = category
         items[index].condition = condition
+        // Replace the photo only when a new one was picked.
+        if let imageData {
+            if let old = items[index].imageFilename { ImageStore.shared.delete(named: old) }
+            items[index].imageFilename = ImageStore.shared.save(imageData)
+        }
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
     /// Removes a listing and keeps the user's listed count in sync.
     func deleteListing(_ item: Item) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        if let name = items[index].imageFilename { ImageStore.shared.delete(named: name) }
         items.remove(at: index)
         if item.sellerName == currentUser.name {
             currentUser.listedCount = max(0, currentUser.listedCount - 1)
@@ -201,4 +217,32 @@ class MarketplaceViewModel: ObservableObject {
         guard let data = try? JSONEncoder().encode(items) else { return }
         UserDefaults.standard.set(data, forKey: Self.itemsKey)
     }
+
+    #if DEBUG
+    /// Renders a stand-in "photo" (gradient + label) for screenshot/demo runs,
+    /// so the image code path is exercised without the system photo picker.
+    private static func debugSamplePhoto(_ label: String, _ colors: [UIColor]) -> Data? {
+        let size = CGSize(width: 700, height: 700)
+        let image = UIGraphicsImageRenderer(size: size).image { ctx in
+            let cg = ctx.cgContext
+            if let gradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: colors.map { $0.cgColor } as CFArray,
+                locations: [0, 1]
+            ) {
+                cg.drawLinearGradient(gradient, start: .zero,
+                                      end: CGPoint(x: size.width, y: size.height), options: [])
+            }
+            let text = "📷 \(label)" as NSString
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 48, weight: .heavy),
+                .foregroundColor: UIColor.white.withAlphaComponent(0.9)
+            ]
+            let textSize = text.size(withAttributes: attrs)
+            text.draw(at: CGPoint(x: (size.width - textSize.width) / 2,
+                                  y: (size.height - textSize.height) / 2), withAttributes: attrs)
+        }
+        return image.jpegData(compressionQuality: 0.8)
+    }
+    #endif
 }

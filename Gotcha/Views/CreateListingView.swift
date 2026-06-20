@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 // MARK: - Create Listing
 struct CreateListingView: View {
@@ -20,6 +21,8 @@ struct CreateListingView: View {
     @State private var description: String
     @State private var category: Item.Category
     @State private var condition: Item.Condition
+    @State private var photoItem: PhotosPickerItem?
+    @State private var pickedImageData: Data?
     @FocusState private var focusedField: Field?
 
     private enum Field { case title, price, description }
@@ -35,6 +38,13 @@ struct CreateListingView: View {
     }
 
     private var isEditing: Bool { editingItem != nil }
+
+    /// The photo to show: a freshly picked one, else the listing's existing photo.
+    private var previewImage: UIImage? {
+        if let data = pickedImageData { return UIImage(data: data) }
+        if let name = editingItem?.imageFilename { return ImageStore.shared.image(named: name) }
+        return nil
+    }
 
     /// Categories a user can actually post into (excludes the "All" filter).
     private var postableCategories: [Item.Category] {
@@ -62,6 +72,11 @@ struct CreateListingView: View {
                         // Preview of how the card will look
                         previewCard
                             .padding(.top, 4)
+
+                        // Photo
+                        FieldBlock(label: "Photo") {
+                            photoPicker
+                        }
 
                         // Title
                         FieldBlock(label: "Title") {
@@ -201,18 +216,77 @@ struct CreateListingView: View {
         .preferredColorScheme(.dark)
     }
 
+    // MARK: - Photo Picker
+    private var photoPicker: some View {
+        PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
+            ZStack {
+                if let image = previewImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    LinearGradient(
+                        colors: category.gradientColors,
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .opacity(0.25)
+                    VStack(spacing: 8) {
+                        Image(systemName: "photo.badge.plus")
+                            .font(.system(size: 30, weight: .semibold))
+                        Text("Add a photo")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundColor(.white.opacity(0.6))
+                }
+            }
+            .frame(height: 180)
+            .frame(maxWidth: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+            )
+            .overlay(alignment: .bottomTrailing) {
+                if previewImage != nil {
+                    Image(systemName: "pencil.circle.fill")
+                        .font(.system(size: 26))
+                        .foregroundStyle(.white, Color(red: 0.50, green: 0.32, blue: 1.00))
+                        .padding(10)
+                }
+            }
+        }
+        .onChange(of: photoItem) { _, newItem in
+            guard let newItem else { return }
+            Task {
+                if let data = try? await newItem.loadTransferable(type: Data.self),
+                   let image = UIImage(data: data) {
+                    await MainActor.run {
+                        pickedImageData = ImageStore.compress(image)
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - Live Preview Card
     private var previewCard: some View {
         HStack(spacing: 14) {
             ZStack {
-                LinearGradient(
-                    colors: category.gradientColors,
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                Image(systemName: category.symbol)
-                    .font(.system(size: 30, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.3))
+                if let image = previewImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    LinearGradient(
+                        colors: category.gradientColors,
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    Image(systemName: category.symbol)
+                        .font(.system(size: 30, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.3))
+                }
             }
             .frame(width: 76, height: 76)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -252,7 +326,8 @@ struct CreateListingView: View {
                     description: description,
                     price: price,
                     category: category,
-                    condition: condition
+                    condition: condition,
+                    imageData: pickedImageData
                 )
             } else {
                 vm.addListing(
@@ -260,7 +335,8 @@ struct CreateListingView: View {
                     description: description,
                     price: price,
                     category: category,
-                    condition: condition
+                    condition: condition,
+                    imageData: pickedImageData
                 )
             }
             dismiss()

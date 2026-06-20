@@ -5,6 +5,11 @@ A running log of notable changes to Gotcha.
 ## [Unreleased]
 
 ### Added
+- **Listing photos via PhotosPicker**: pick a photo when creating or editing a
+  listing. Images are downscaled/JPEG-compressed and stored on disk in an
+  `ImageStore` (only the filename is saved in the listing), then shown on cards,
+  the detail hero, and profile rows — with the category gradient as a fallback
+  when there's no photo.
 - **Local persistence**: listings (including your own and favorites) are saved
   to `UserDefaults` as JSON and restored on launch, so changes survive app
   restarts. `Item` and its enums are now `Codable`.
