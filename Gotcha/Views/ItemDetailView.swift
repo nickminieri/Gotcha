@@ -19,7 +19,7 @@ struct ItemDetailView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            Color(red: 0.07, green: 0.07, blue: 0.10)
+            Theme.bg
                 .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
@@ -245,7 +245,7 @@ struct ItemDetailView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
                 .padding(.bottom, 32)
-                .background(Color(red: 0.07, green: 0.07, blue: 0.10))
+                .background(Theme.bg)
             }
         }
         .navigationBarHidden(true)

@@ -19,7 +19,7 @@ struct SellerProfileView: View {
 
     var body: some View {
         ZStack {
-            Color(red: 0.07, green: 0.07, blue: 0.10).ignoresSafeArea()
+            Theme.bg.ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
@@ -60,7 +60,7 @@ struct SellerProfileView: View {
                 }
             }
         }
-        .toolbarBackground(Color(red: 0.07, green: 0.07, blue: 0.10), for: .navigationBar)
+        .toolbarBackground(Theme.bg, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .sheet(isPresented: $showWriteReview) {
             WriteReviewView(seller: seller, vm: vm)
@@ -215,7 +215,7 @@ struct WriteReviewView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(red: 0.07, green: 0.07, blue: 0.10).ignoresSafeArea()
+                Theme.bg.ignoresSafeArea()
 
                 VStack(spacing: 24) {
                     Text("How was your experience with \(seller.name)?")
@@ -267,7 +267,7 @@ struct WriteReviewView: View {
                     .fontWeight(.semibold)
                 }
             }
-            .toolbarBackground(Color(red: 0.07, green: 0.07, blue: 0.10), for: .navigationBar)
+            .toolbarBackground(Theme.bg, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
         }
         .preferredColorScheme(.dark)

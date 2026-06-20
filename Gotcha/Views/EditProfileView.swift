@@ -36,7 +36,7 @@ struct EditProfileView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(red: 0.07, green: 0.07, blue: 0.10).ignoresSafeArea()
+                Theme.bg.ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 28) {
@@ -69,7 +69,7 @@ struct EditProfileView: View {
                                     .frame(width: 32, height: 32)
                                     .background(Color(red: 0.60, green: 0.40, blue: 1.00))
                                     .clipShape(Circle())
-                                    .overlay(Circle().strokeBorder(Color(red: 0.07, green: 0.07, blue: 0.10), lineWidth: 3))
+                                    .overlay(Circle().strokeBorder(Theme.bg, lineWidth: 3))
                             }
                         }
                         .padding(.top, 12)
@@ -102,7 +102,7 @@ struct EditProfileView: View {
                     .disabled(!canSave)
                 }
             }
-            .toolbarBackground(Color(red: 0.07, green: 0.07, blue: 0.10), for: .navigationBar)
+            .toolbarBackground(Theme.bg, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
         }
         .preferredColorScheme(.dark)

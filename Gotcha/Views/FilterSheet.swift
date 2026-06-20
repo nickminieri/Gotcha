@@ -17,7 +17,7 @@ struct FilterSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(red: 0.07, green: 0.07, blue: 0.10).ignoresSafeArea()
+                Theme.bg.ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 28) {
@@ -103,7 +103,7 @@ struct FilterSheet: View {
                         .fontWeight(.semibold)
                 }
             }
-            .toolbarBackground(Color(red: 0.07, green: 0.07, blue: 0.10), for: .navigationBar)
+            .toolbarBackground(Theme.bg, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
         }
         .preferredColorScheme(.dark)

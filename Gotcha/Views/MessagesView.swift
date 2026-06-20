@@ -140,7 +140,7 @@ struct ConversationView: View {
 
     var body: some View {
         ZStack {
-            Color(red: 0.07, green: 0.07, blue: 0.10).ignoresSafeArea()
+            Theme.bg.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 header
@@ -268,7 +268,7 @@ struct ConversationView: View {
             .padding(.top, 10)
             .padding(.bottom, 10)
         }
-        .background(Color(red: 0.07, green: 0.07, blue: 0.10))
+        .background(Theme.bg)
     }
 
     private func sendDraft() {

@@ -18,7 +18,7 @@ struct MarketplaceView: View {
     var body: some View {
         NavigationStack(path: $path) {
             ZStack {
-                Color(red: 0.07, green: 0.07, blue: 0.10)
+                Theme.bg
                     .ignoresSafeArea()
 
                 Group {
@@ -88,20 +88,18 @@ struct FloatingTabBar: View {
     var body: some View {
         HStack(spacing: 0) {
             ForEach(MarketplaceViewModel.Tab.allCases, id: \.self) { tab in
+                let isSelected = selectedTab == tab
                 Button {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.72)) {
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.72)) {
                         selectedTab = tab
                     }
                 } label: {
-                    VStack(spacing: 5) {
+                    VStack(spacing: 4) {
                         ZStack(alignment: .topTrailing) {
-                            Image(systemName: selectedTab == tab
-                                  ? tab.symbols.filled
-                                  : tab.symbols.default)
-                                .font(.system(size: 22, weight: .semibold))
-                                .scaleEffect(selectedTab == tab ? 1.10 : 1.0)
-                                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: selectedTab)
+                            Image(systemName: isSelected ? tab.symbols.filled : tab.symbols.default)
+                                .font(.system(size: 20, weight: .semibold))
+                                .frame(height: 24)
 
                             if tab == .messages && messagesBadge > 0 {
                                 Text("\(messagesBadge)")
@@ -109,32 +107,35 @@ struct FloatingTabBar: View {
                                     .foregroundColor(.white)
                                     .frame(minWidth: 16, minHeight: 16)
                                     .padding(.horizontal, 3)
-                                    .background(Capsule().fill(Color(red: 1.0, green: 0.3, blue: 0.4)))
-                                    .offset(x: 12, y: -8)
+                                    .background(Capsule().fill(Theme.sold))
+                                    .overlay(Capsule().strokeBorder(Theme.elevated, lineWidth: 1.5))
+                                    .offset(x: 13, y: -7)
                                     .transition(.scale.combined(with: .opacity))
                             }
                         }
                         Text(tab.rawValue)
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .font(.system(size: 10, weight: .semibold, design: .rounded))
                     }
-                    .foregroundColor(
-                        selectedTab == tab
-                        ? Color(red: 0.70, green: 0.52, blue: 1.00)
-                        : Color.white.opacity(0.35)
-                    )
+                    .foregroundStyle(isSelected ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.textTertiary))
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 11)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 16)
-        .background(.ultraThinMaterial)
-        .overlay(
-            Rectangle()
-                .fill(Color.white.opacity(0.07))
-                .frame(height: 1),
-            alignment: .top
+        .padding(.horizontal, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(Theme.elevated)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .strokeBorder(Theme.stroke, lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.45), radius: 18, x: 0, y: 8)
         )
+        .padding(.horizontal, 16)
+        .padding(.bottom, 4)
     }
 }
 
@@ -149,60 +150,54 @@ struct ExploreTab: View {
             VStack(spacing: 0) {
 
                 // Header
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Gotcha")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .foregroundColor(Color(red: 0.70, green: 0.52, blue: 1.00))
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("GOTCHA")
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .tracking(1.5)
+                            .foregroundStyle(Theme.accentGradient)
                         Text("What's for sale?")
-                            .font(.system(size: 26, weight: .black, design: .rounded))
-                            .foregroundColor(.white)
+                            .font(.system(size: 27, weight: .heavy, design: .rounded))
+                            .foregroundColor(Theme.textPrimary)
                     }
                     Spacer()
                     HStack(spacing: 10) {
                         Button { } label: {
                             Image(systemName: "bell")
-                                .font(.system(size: 18, weight: .medium))
+                                .font(.system(size: 17, weight: .semibold))
                                 .foregroundColor(.white)
-                                .padding(12)
-                                .background(Color.white.opacity(0.08))
-                                .clipShape(Circle())
+                                .frame(width: 44, height: 44)
+                                .background(Circle().fill(Theme.bgRaised))
+                                .overlay(Circle().strokeBorder(Theme.hairline, lineWidth: 1))
                         }
                         Button {
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
                             vm.isPresentingCreateListing = true
                         } label: {
                             Image(systemName: "plus")
-                                .font(.system(size: 18, weight: .bold))
+                                .font(.system(size: 19, weight: .bold))
                                 .foregroundColor(.white)
-                                .padding(12)
-                                .background(
-                                    LinearGradient(
-                                        colors: [Color(red: 0.50, green: 0.32, blue: 1.00),
-                                                 Color(red: 0.85, green: 0.55, blue: 1.00)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .clipShape(Circle())
+                                .frame(width: 44, height: 44)
+                                .background(Circle().fill(Theme.accentGradient))
+                                .shadow(color: Theme.accent.opacity(0.4), radius: 8, x: 0, y: 4)
                         }
                         .buttonStyle(SpringButtonStyle())
                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 20)
+                .padding(.top, 16)
                 .padding(.bottom, 16)
 
                 // Search bar
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
-                        .foregroundColor(Color.white.opacity(0.38))
-                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(Theme.textTertiary)
+                        .font(.system(size: 15, weight: .semibold))
                     TextField(
                         "",
                         text: $vm.searchText,
                         prompt: Text("Search listings...")
-                            .foregroundColor(.white.opacity(0.22))
+                            .foregroundColor(Theme.textTertiary)
                     )
                     .foregroundColor(.white)
                     .font(.system(size: 15, design: .rounded))
@@ -220,13 +215,10 @@ struct ExploreTab: View {
                     }
                 }
                 .padding(.horizontal, 16)
-                .padding(.vertical, 13)
-                .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color.white.opacity(0.08))
-                )
+                .padding(.vertical, 14)
+                .cardSurface(cornerRadius: 16, fill: Theme.bgRaised)
                 .padding(.horizontal, 20)
-                .padding(.bottom, 16)
+                .padding(.bottom, 18)
 
                 // Category chips
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -356,20 +348,18 @@ struct CategoryChip: View {
                 Text(category.rawValue)
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
             }
-            .foregroundColor(isSelected ? .white : .white.opacity(0.45))
-            .padding(.horizontal, 14)
-            .padding(.vertical, 9)
+            .foregroundColor(isSelected ? .white : Theme.textSecondary)
+            .padding(.horizontal, 15)
+            .padding(.vertical, 10)
             .background(
-                Capsule()
-                    .fill(
-                        isSelected
-                        ? AnyShapeStyle(LinearGradient(
-                            colors: category.gradientColors,
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ))
-                        : AnyShapeStyle(Color.white.opacity(0.08))
-                    )
+                ZStack {
+                    if isSelected {
+                        Capsule().fill(Theme.accentGradient)
+                    } else {
+                        Capsule().fill(Theme.bgRaised)
+                        Capsule().strokeBorder(Theme.hairline, lineWidth: 1)
+                    }
+                }
             )
         }
         .buttonStyle(SpringButtonStyle())
@@ -389,28 +379,36 @@ struct ItemCard: View {
 
                 // Visual area — photo or gradient + icon
                 ZStack(alignment: .topTrailing) {
-                    ListingImage(item: item, symbolSize: 48)
+                    ListingImage(item: item, symbolSize: 46)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 140)
+                        .frame(height: 150)
+                        .overlay(
+                            // Subtle bottom scrim grounds the art and improves legibility.
+                            LinearGradient(
+                                colors: [.clear, .black.opacity(0.28)],
+                                startPoint: .center, endPoint: .bottom
+                            )
+                        )
                         .overlay {
                             if item.isSold {
                                 ZStack {
                                     Color.black.opacity(0.5)
                                     Text("SOLD")
-                                        .font(.system(size: 15, weight: .black, design: .rounded))
+                                        .font(.system(size: 14, weight: .black, design: .rounded))
                                         .foregroundColor(.white)
+                                        .tracking(0.5)
                                         .padding(.horizontal, 14)
                                         .padding(.vertical, 6)
-                                        .background(Capsule().fill(Color(red: 1.0, green: 0.3, blue: 0.4)))
+                                        .background(Capsule().fill(Theme.sold))
                                 }
                             }
                         }
                         .clipShape(
                             UnevenRoundedRectangle(
-                                topLeadingRadius: 14,
+                                topLeadingRadius: Theme.radius,
                                 bottomLeadingRadius: 0,
                                 bottomTrailingRadius: 0,
-                                topTrailingRadius: 14
+                                topTrailingRadius: Theme.radius
                             )
                         )
 
@@ -426,35 +424,38 @@ struct ItemCard: View {
                     } label: {
                         Image(systemName: item.isFavorite ? "heart.fill" : "heart")
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(item.isFavorite ? Color(red: 1.0, green: 0.3, blue: 0.4) : .white)
-                            .padding(8)
-                            .background(.ultraThinMaterial)
+                            .foregroundColor(item.isFavorite ? Theme.sold : .white)
+                            .frame(width: 30, height: 30)
+                            .background(Color.black.opacity(0.28))
+                            .background(.ultraThinMaterial, in: Circle())
                             .clipShape(Circle())
                             .scaleEffect(heartBouncing ? 1.35 : 1.0)
                     }
                     .buttonStyle(.plain)
-                    .padding(8)
+                    .padding(10)
                 }
 
                 // Info area
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(item.title)
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                        .font(.system(size: 13.5, weight: .bold, design: .rounded))
+                        .foregroundColor(Theme.textPrimary)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
 
                     Text("\(item.sellerName) · \(item.university)")
                         .font(.system(size: 11, design: .rounded))
-                        .foregroundColor(.white.opacity(0.38))
+                        .foregroundColor(Theme.textTertiary)
                         .lineLimit(1)
 
-                    HStack(alignment: .bottom) {
+                    HStack(alignment: .center) {
                         Text(String(format: "$%.2f", item.price))
-                            .font(.system(size: 16, weight: .black, design: .rounded))
-                            .foregroundColor(.white)
-                        Spacer()
-                        // Condition dot
+                            .font(.system(size: 17, weight: .black, design: .rounded))
+                            .foregroundColor(Theme.textPrimary)
+                            .lineLimit(1)
+                            .fixedSize()
+                        Spacer(minLength: 6)
+                        // Condition pill
                         HStack(spacing: 4) {
                             Circle()
                                 .fill(item.condition.color)
@@ -462,17 +463,19 @@ struct ItemCard: View {
                             Text(item.condition.rawValue)
                                 .font(.system(size: 10, weight: .semibold, design: .rounded))
                                 .foregroundColor(item.condition.color)
+                                .lineLimit(1)
                         }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(item.condition.color.opacity(0.12)))
                     }
-                    .padding(.top, 2)
+                    .padding(.top, 3)
                 }
-                .padding(.horizontal, 11)
-                .padding(.vertical, 11)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 12)
             }
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color(red: 0.13, green: 0.13, blue: 0.17))
-            )
+            .cardSurface()
+            .shadow(color: .black.opacity(0.25), radius: 10, x: 0, y: 6)
         }
         .buttonStyle(SpringButtonStyle())
     }

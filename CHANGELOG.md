@@ -4,6 +4,15 @@ A running log of notable changes to Gotcha.
 
 ## [Unreleased]
 
+### Changed
+- **Premium UI redesign**: introduced a central `Theme` design system (layered
+  near-black surfaces, a single violet accent + gradient, text/hairline tokens)
+  and applied it across the app. Category art is now muted jewel-tones instead of
+  saturated rainbows; the tab bar is a clean floating pill with a solid surface
+  (fixing the translucent color bleed); cards gained hairline borders, soft
+  shadows, an image scrim, and a condition pill; the Explore header, search bar,
+  and category chips were refined for consistency.
+
 ### Added
 - **Seller ratings & reviews**: tap a seller on a listing to open their profile
   with an average rating (half-star display) and a list of reviews; buyers can

@@ -74,15 +74,16 @@ struct Item: Identifiable, Codable {
             }
         }
 
+        /// Muted, jewel-toned gradients — refined art tiles rather than candy colors.
         var gradientColors: [Color] {
             switch self {
-            case .all:         return [Color(red: 0.50, green: 0.32, blue: 1.00), Color(red: 0.85, green: 0.55, blue: 1.00)]
-            case .clothing:    return [Color(red: 0.30, green: 0.50, blue: 1.00), Color(red: 0.55, green: 0.75, blue: 1.00)]
-            case .electronics: return [Color(red: 0.00, green: 0.60, blue: 0.90), Color(red: 0.00, green: 0.88, blue: 0.80)]
-            case .furniture:   return [Color(red: 0.80, green: 0.40, blue: 0.10), Color(red: 1.00, green: 0.70, blue: 0.25)]
-            case .appliances:  return [Color(red: 0.15, green: 0.70, blue: 0.40), Color(red: 0.35, green: 0.95, blue: 0.55)]
-            case .books:       return [Color(red: 0.90, green: 0.20, blue: 0.40), Color(red: 1.00, green: 0.50, blue: 0.55)]
-            case .other:       return [Color(red: 0.45, green: 0.45, blue: 0.55), Color(red: 0.65, green: 0.65, blue: 0.75)]
+            case .all:         return [Color(red: 0.36, green: 0.30, blue: 0.60), Color(red: 0.54, green: 0.44, blue: 0.82)]
+            case .clothing:    return [Color(red: 0.24, green: 0.31, blue: 0.50), Color(red: 0.36, green: 0.45, blue: 0.66)]
+            case .electronics: return [Color(red: 0.15, green: 0.33, blue: 0.40), Color(red: 0.22, green: 0.47, blue: 0.52)]
+            case .furniture:   return [Color(red: 0.40, green: 0.29, blue: 0.21), Color(red: 0.58, green: 0.43, blue: 0.30)]
+            case .appliances:  return [Color(red: 0.19, green: 0.35, blue: 0.29), Color(red: 0.28, green: 0.48, blue: 0.39)]
+            case .books:       return [Color(red: 0.42, green: 0.25, blue: 0.34), Color(red: 0.58, green: 0.36, blue: 0.46)]
+            case .other:       return [Color(red: 0.26, green: 0.27, blue: 0.33), Color(red: 0.37, green: 0.38, blue: 0.45)]
             }
         }
     }

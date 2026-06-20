@@ -336,5 +336,5 @@ struct MyListingRow: View {
 #Preview {
     UserProfileView(vm: MarketplaceViewModel())
         .environmentObject(AppState())
-        .background(Color(red: 0.07, green: 0.07, blue: 0.10))
+        .background(Theme.bg)
 }
