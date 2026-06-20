@@ -11,14 +11,26 @@ import Combine
 // MARK: - App State
 class AppState: ObservableObject {
     @Published var isLoggedIn = false
+    /// Email used to sign in, so the marketplace can build the user's profile.
+    @Published var signedInEmail: String?
 
-    func login() {
+    init() {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-uiAutoLogin") {
+            isLoggedIn = true
+        }
+        #endif
+    }
+
+    func login(email: String? = nil) {
+        signedInEmail = email
         withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
             isLoggedIn = true
         }
     }
 
     func logout() {
+        signedInEmail = nil
         withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
             isLoggedIn = false
         }

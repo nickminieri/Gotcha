@@ -10,6 +10,7 @@ import SwiftUI
 struct UserProfileView: View {
     @ObservedObject var vm: MarketplaceViewModel
     @EnvironmentObject var appState: AppState
+    @State private var pendingDelete: Item?
     private var user: User { vm.currentUser }
 
     var body: some View {
@@ -83,7 +84,11 @@ struct UserProfileView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         ForEach(vm.myListings) { item in
-                            MyListingRow(item: item)
+                            MyListingRow(
+                                item: item,
+                                onEdit: { vm.editingListing = item },
+                                onDelete: { pendingDelete = item }
+                            )
                         }
                     }
                     .padding(.horizontal, 20)
@@ -140,6 +145,25 @@ struct UserProfileView: View {
                 .padding(.top, 24)
                 .padding(.bottom, 100)
             }
+        }
+        .confirmationDialog(
+            "Delete this listing?",
+            isPresented: Binding(
+                get: { pendingDelete != nil },
+                set: { if !$0 { pendingDelete = nil } }
+            ),
+            titleVisibility: .visible,
+            presenting: pendingDelete
+        ) { item in
+            Button("Delete", role: .destructive) {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                    vm.deleteListing(item)
+                }
+                pendingDelete = nil
+            }
+            Button("Cancel", role: .cancel) { pendingDelete = nil }
+        } message: { item in
+            Text("\"\(item.title)\" will be permanently removed.")
         }
     }
 }
@@ -198,6 +222,8 @@ struct ProfileMenuItem: View {
 // MARK: - My Listing Row
 struct MyListingRow: View {
     let item: Item
+    let onEdit: () -> Void
+    let onDelete: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
@@ -227,12 +253,31 @@ struct MyListingRow: View {
             Text(String(format: "$%.2f", item.price))
                 .font(.system(size: 15, weight: .black, design: .rounded))
                 .foregroundColor(.white)
+
+            Menu {
+                Button { onEdit() } label: {
+                    Label("Edit", systemImage: "pencil")
+                }
+                Button(role: .destructive) { onDelete() } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.white.opacity(0.5))
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(Color.white.opacity(0.06))
         )
+        .contextMenu {
+            Button { onEdit() } label: { Label("Edit", systemImage: "pencil") }
+            Button(role: .destructive) { onDelete() } label: { Label("Delete", systemImage: "trash") }
+        }
     }
 }
 

@@ -5,6 +5,19 @@ A running log of notable changes to Gotcha.
 ## [Unreleased]
 
 ### Added
+- **Edit & delete your own listings**: each row in the Profile "My Listings"
+  section has a "•••" menu (and context menu) for Edit / Delete. Editing reuses
+  the listing form pre-filled with the item's values; deleting asks for
+  confirmation. The "Listed" stat stays in sync.
+- **User profile derived from login email**: signing in builds the current
+  user's name and university from their campus email
+  (e.g. `alex.rivera@nyu.edu` -> "Alex R." at "NYU") via
+  `User.fromCampusEmail(_:)`.
+- **DEBUG launch-argument hooks** (gated by `#if DEBUG`, never shipped) for
+  deterministic runs/screenshots: `-uiAutoLogin`, `-uiSeedMyListings`,
+  `-uiStartTab <Tab>`, `-uiPresentCreate`.
+
+### Earlier in this cycle
 - **Create Listing flow** (`CreateListingView`): a form sheet to post an item
   with title, price, category, condition, and description, including a live
   preview card that updates as you type. New listings are inserted at the top of

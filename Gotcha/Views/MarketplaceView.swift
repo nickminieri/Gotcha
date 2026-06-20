@@ -9,8 +9,10 @@ import SwiftUI
 
 // MARK: - Marketplace Root
 struct MarketplaceView: View {
+    @EnvironmentObject private var appState: AppState
     @StateObject private var vm = MarketplaceViewModel()
     @State private var selectedItem: Item?
+    @State private var didConfigureUser = false
 
     var body: some View {
         NavigationStack {
@@ -41,6 +43,17 @@ struct MarketplaceView: View {
             }
             .sheet(isPresented: $vm.isPresentingCreateListing) {
                 CreateListingView(vm: vm)
+            }
+            .sheet(item: $vm.editingListing) { item in
+                CreateListingView(vm: vm, editingItem: item)
+            }
+        }
+        .onAppear {
+            // Derive the signed-in user's profile from their campus email, once.
+            guard !didConfigureUser else { return }
+            didConfigureUser = true
+            if let email = appState.signedInEmail, !email.isEmpty {
+                vm.currentUser = User.fromCampusEmail(email)
             }
         }
     }

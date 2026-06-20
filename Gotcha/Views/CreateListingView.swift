@@ -12,14 +12,29 @@ struct CreateListingView: View {
     @ObservedObject var vm: MarketplaceViewModel
     @Environment(\.dismiss) private var dismiss
 
-    @State private var title = ""
-    @State private var priceText = ""
-    @State private var description = ""
-    @State private var category: Item.Category = .clothing
-    @State private var condition: Item.Condition = .good
+    /// When set, the form edits this listing instead of creating a new one.
+    private let editingItem: Item?
+
+    @State private var title: String
+    @State private var priceText: String
+    @State private var description: String
+    @State private var category: Item.Category
+    @State private var condition: Item.Condition
     @FocusState private var focusedField: Field?
 
     private enum Field { case title, price, description }
+
+    init(vm: MarketplaceViewModel, editingItem: Item? = nil) {
+        self.vm = vm
+        self.editingItem = editingItem
+        _title = State(initialValue: editingItem?.title ?? "")
+        _priceText = State(initialValue: editingItem.map { String(format: "%.2f", $0.price) } ?? "")
+        _description = State(initialValue: editingItem?.description ?? "")
+        _category = State(initialValue: editingItem?.category ?? .clothing)
+        _condition = State(initialValue: editingItem?.condition ?? .good)
+    }
+
+    private var isEditing: Bool { editingItem != nil }
 
     /// Categories a user can actually post into (excludes the "All" filter).
     private var postableCategories: [Item.Category] {
@@ -168,7 +183,7 @@ struct CreateListingView: View {
                     .padding(.top, 12)
                 }
             }
-            .navigationTitle("New Listing")
+            .navigationTitle(isEditing ? "Edit Listing" : "New Listing")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -230,16 +245,27 @@ struct CreateListingView: View {
     private var publishButton: some View {
         Button {
             guard let price = parsedPrice, canPublish else { return }
-            vm.addListing(
-                title: title,
-                description: description,
-                price: price,
-                category: category,
-                condition: condition
-            )
+            if let editingItem {
+                vm.updateListing(
+                    editingItem,
+                    title: title,
+                    description: description,
+                    price: price,
+                    category: category,
+                    condition: condition
+                )
+            } else {
+                vm.addListing(
+                    title: title,
+                    description: description,
+                    price: price,
+                    category: category,
+                    condition: condition
+                )
+            }
             dismiss()
         } label: {
-            Text("Publish Listing")
+            Text(isEditing ? "Save Changes" : "Publish Listing")
                 .font(.system(size: 17, weight: .semibold, design: .rounded))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)

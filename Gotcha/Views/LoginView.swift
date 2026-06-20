@@ -285,7 +285,7 @@ struct LoginFormPage: View {
                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     isLoading = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-                        appState.login()
+                        appState.login(email: email)
                     }
                 } label: {
                     ZStack {
