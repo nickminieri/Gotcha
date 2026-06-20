@@ -11,6 +11,7 @@ struct UserProfileView: View {
     @ObservedObject var vm: MarketplaceViewModel
     @EnvironmentObject var appState: AppState
     @State private var pendingDelete: Item?
+    @State private var showEditProfile = false
     private var user: User { vm.currentUser }
 
     var body: some View {
@@ -29,17 +30,26 @@ struct UserProfileView: View {
                 // Avatar + identity
                 VStack(spacing: 14) {
                     ZStack {
-                        Circle()
-                            .fill(LinearGradient(
-                                colors: [Color(red: 0.50, green: 0.32, blue: 1.00),
-                                         Color(red: 0.85, green: 0.55, blue: 1.00)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ))
-                            .frame(width: 84, height: 84)
-                        Text(String(user.name.prefix(1)))
-                            .font(.system(size: 34, weight: .black, design: .rounded))
-                            .foregroundColor(.white)
+                        if let name = user.avatarFilename,
+                           let image = ImageStore.shared.image(named: name) {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 84, height: 84)
+                                .clipShape(Circle())
+                        } else {
+                            Circle()
+                                .fill(LinearGradient(
+                                    colors: [Color(red: 0.50, green: 0.32, blue: 1.00),
+                                             Color(red: 0.85, green: 0.55, blue: 1.00)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ))
+                                .frame(width: 84, height: 84)
+                            Text(String(user.name.prefix(1)))
+                                .font(.system(size: 34, weight: .black, design: .rounded))
+                                .foregroundColor(.white)
+                        }
                     }
                     VStack(spacing: 5) {
                         Text(user.name)
@@ -54,6 +64,18 @@ struct UserProfileView: View {
                                 .foregroundColor(.white.opacity(0.45))
                         }
                     }
+
+                    Button {
+                        showEditProfile = true
+                    } label: {
+                        Text("Edit Profile")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(Color.white.opacity(0.1)))
+                    }
+                    .buttonStyle(SpringButtonStyle())
                 }
                 .padding(.bottom, 28)
 
@@ -165,6 +187,16 @@ struct UserProfileView: View {
             Button("Cancel", role: .cancel) { pendingDelete = nil }
         } message: { item in
             Text("\"\(item.title)\" will be permanently removed.")
+        }
+        .sheet(isPresented: $showEditProfile) {
+            EditProfileView(vm: vm)
+        }
+        .onAppear {
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("-uiPresentEditProfile") {
+                showEditProfile = true
+            }
+            #endif
         }
     }
 }

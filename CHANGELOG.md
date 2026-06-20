@@ -5,6 +5,10 @@ A running log of notable changes to Gotcha.
 ## [Unreleased]
 
 ### Added
+- **Profile editing**: edit your name and university and pick an avatar photo
+  (PhotosPicker) from the Profile tab. The profile is persisted across launches,
+  the avatar shows on the profile, and renaming re-attributes your listings to
+  the new display name. `User` is now `Codable` with an `avatarFilename`.
 - **Filters on Explore**: a filter sheet to narrow listings by condition
   (multi-select), max price (slider), and a "hide sold items" toggle, with an
   active-filter count badge on the filter button and a one-tap Clear. Filters

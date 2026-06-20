@@ -58,7 +58,8 @@ struct MarketplaceView: View {
             // Derive the signed-in user's profile from their campus email, once.
             guard !didConfigureUser else { return }
             didConfigureUser = true
-            if let email = appState.signedInEmail, !email.isEmpty {
+            // Derive from the login email only when there's no saved profile yet.
+            if !vm.hasStoredProfile, let email = appState.signedInEmail, !email.isEmpty {
                 vm.currentUser = User.fromCampusEmail(email)
             }
             #if DEBUG

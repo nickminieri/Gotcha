@@ -20,13 +20,18 @@ class MarketplaceViewModel: ObservableObject {
     @Published var maxPrice: Double?
     @Published var hideSold: Bool = false
     @Published var selectedTab: Tab = .explore
-    @Published var currentUser: User = .preview
+    @Published var currentUser: User = .preview {
+        didSet { persistUserIfNeeded() }
+    }
     @Published var isPresentingCreateListing = false
     @Published var editingListing: Item?
+    /// True when a saved profile was loaded, so we don't overwrite it from email.
+    private(set) var hasStoredProfile = false
 
     /// When false (e.g. seeded UI-test runs), changes aren't written to disk.
     private var persistenceEnabled = true
     private static let itemsKey = "gotcha.items.v1"
+    private static let userKey = "gotcha.user.v1"
 
     init() {
         #if DEBUG
@@ -52,8 +57,13 @@ class MarketplaceViewModel: ObservableObject {
                 items[1].imageFilename = ImageStore.shared.save(d)
             }
             items[1].isSold = true
+            // Give the seeded profile an avatar so avatar rendering is visible.
+            if let d = Self.debugSamplePhoto("AR", [.systemPurple, .systemPink]) {
+                currentUser.avatarFilename = ImageStore.shared.save(d)
+            }
         } else {
             loadItems()
+            loadUser()
         }
         if let i = args.firstIndex(of: "-uiAddTestListing"), i + 1 < args.count {
             addListing(title: args[i + 1], description: "Added by UI hook.", price: 42.00, category: .other, condition: .good)
@@ -67,6 +77,7 @@ class MarketplaceViewModel: ObservableObject {
         }
         #else
         loadItems()
+        loadUser()
         #endif
     }
 
@@ -237,6 +248,27 @@ class MarketplaceViewModel: ObservableObject {
         items.first(where: { $0.id == item.id }) ?? item
     }
 
+    /// Updates the signed-in user's profile, re-attributing their listings to
+    /// the new display name and saving a new avatar if provided.
+    func updateProfile(name: String, university: String, avatarData: Data?) {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedUni = university.trimmingCharacters(in: .whitespacesAndNewlines)
+        let oldName = currentUser.name
+
+        if !trimmedName.isEmpty, trimmedName != oldName {
+            for index in items.indices where items[index].sellerName == oldName {
+                items[index].sellerName = trimmedName
+            }
+            currentUser.name = trimmedName
+        }
+        if !trimmedUni.isEmpty { currentUser.university = trimmedUni }
+        if let avatarData {
+            if let old = currentUser.avatarFilename { ImageStore.shared.delete(named: old) }
+            currentUser.avatarFilename = ImageStore.shared.save(avatarData)
+        }
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+
     // MARK: - Persistence
     /// Loads saved listings from disk, falling back to the bundled samples on
     /// first launch or if decoding fails.
@@ -252,6 +284,19 @@ class MarketplaceViewModel: ObservableObject {
         guard persistenceEnabled else { return }
         guard let data = try? JSONEncoder().encode(items) else { return }
         UserDefaults.standard.set(data, forKey: Self.itemsKey)
+    }
+
+    private func loadUser() {
+        guard let data = UserDefaults.standard.data(forKey: Self.userKey),
+              let saved = try? JSONDecoder().decode(User.self, from: data) else { return }
+        currentUser = saved
+        hasStoredProfile = true
+    }
+
+    private func persistUserIfNeeded() {
+        guard persistenceEnabled else { return }
+        guard let data = try? JSONEncoder().encode(currentUser) else { return }
+        UserDefaults.standard.set(data, forKey: Self.userKey)
     }
 
     #if DEBUG

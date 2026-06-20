@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct User: Identifiable {
+struct User: Identifiable, Codable {
     let id: UUID
     var name: String
     var email: String
@@ -16,6 +16,8 @@ struct User: Identifiable {
     var rating: Double
     var reviewCount: Int
     var listedCount: Int
+    /// Filename of the user's avatar photo in `ImageStore`, if any.
+    var avatarFilename: String?
 
     init(
         id: UUID = UUID(),
@@ -25,7 +27,8 @@ struct User: Identifiable {
         joinedDate: Date = Date(),
         rating: Double = 0.0,
         reviewCount: Int = 0,
-        listedCount: Int = 0
+        listedCount: Int = 0,
+        avatarFilename: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -35,6 +38,7 @@ struct User: Identifiable {
         self.rating = rating
         self.reviewCount = reviewCount
         self.listedCount = listedCount
+        self.avatarFilename = avatarFilename
     }
 
     static let preview = User(
