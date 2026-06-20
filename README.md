@@ -12,6 +12,7 @@ Gotcha is a digital marketplace app designed specifically for college students. 
 - **Local Persistence**: Listings and favorites are saved on-device and restored across app launches.
 - **Messaging**: Chat with sellers from any listing — conversations appear in the Messages tab and are saved between launches.
 - **Profile**: Edit your name, university, and avatar photo; view your listings and stats.
+- **Seller Ratings & Reviews**: View a seller's rating and reviews, and leave your own — building trust in the campus community.
 - **Favorite Items**: Mark items as favorites to save for later and view them on a dedicated Favorites page.
 - **Interactive UI**:
   - Explore tab for browsing the marketplace.
@@ -63,8 +64,8 @@ Gotcha is a digital marketplace app designed specifically for college students. 
   - Wire the login/signup flow to a real auth provider with student-email verification (the UI is built; it currently logs in locally).
 - **Message System**:
   - Sync conversations to a backend so messages reach real sellers in real time (local messaging is implemented).
-- **Reviews & Ratings**:
-  - Let buyers rate sellers after a sale (profile editing, avatars, and listing management are implemented).
+- **Push Notifications**:
+  - Notify users of new messages and reviews (in-app messaging, reviews, profile editing, and listing management are implemented).
 - **Backend Integration**:
   - Store listings, user data, and favorites in a backend database.
 - **Improved Search**:

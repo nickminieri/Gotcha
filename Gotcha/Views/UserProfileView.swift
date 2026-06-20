@@ -86,11 +86,14 @@ struct UserProfileView: View {
                     Rectangle()
                         .fill(Color.white.opacity(0.08))
                         .frame(width: 1, height: 36)
-                    ProfileStat(value: String(format: "%.1f★", user.rating), label: "Rating")
+                    ProfileStat(
+                        value: vm.averageRating(for: user.name).map { String(format: "%.1f★", $0) } ?? "New",
+                        label: "Rating"
+                    )
                     Rectangle()
                         .fill(Color.white.opacity(0.08))
                         .frame(width: 1, height: 36)
-                    ProfileStat(value: "\(user.reviewCount)", label: "Reviews")
+                    ProfileStat(value: "\(vm.reviewCount(for: user.name))", label: "Reviews")
                 }
                 .padding(.vertical, 20)
                 .background(Color.white.opacity(0.06))

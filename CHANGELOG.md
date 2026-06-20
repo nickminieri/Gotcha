@@ -5,6 +5,11 @@ A running log of notable changes to Gotcha.
 ## [Unreleased]
 
 ### Added
+- **Seller ratings & reviews**: tap a seller on a listing to open their profile
+  with an average rating (half-star display) and a list of reviews; buyers can
+  write a star rating + comment. The listing's seller card shows the rating, and
+  the Profile tab's Rating/Reviews stats are computed from real reviews. Reviews
+  persist to `UserDefaults` (`Review` model, `SellerProfileView`).
 - **Profile editing**: edit your name and university and pick an avatar photo
   (PhotosPicker) from the Profile tab. The profile is persisted across launches,
   the avatar shows on the profile, and renaming re-attributes your listings to

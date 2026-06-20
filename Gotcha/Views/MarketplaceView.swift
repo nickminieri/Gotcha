@@ -40,12 +40,17 @@ struct MarketplaceView: View {
                 FloatingTabBar(selectedTab: $vm.selectedTab, messagesBadge: messaging.totalUnread)
             }
             .navigationDestination(for: Item.self) { item in
-                ItemDetailView(item: item, vm: vm) { selected in
+                ItemDetailView(item: item, vm: vm, onMessage: { selected in
                     path.append(messaging.openConversationValue(for: selected))
-                }
+                }, onSeller: { seller in
+                    path.append(seller)
+                })
             }
             .navigationDestination(for: Conversation.self) { convo in
                 ConversationView(conversationID: convo.id, messaging: messaging)
+            }
+            .navigationDestination(for: SellerRef.self) { seller in
+                SellerProfileView(seller: seller, vm: vm)
             }
             .sheet(isPresented: $vm.isPresentingCreateListing) {
                 CreateListingView(vm: vm)
@@ -66,6 +71,9 @@ struct MarketplaceView: View {
             if ProcessInfo.processInfo.arguments.contains("-uiOpenFirstConversation"),
                let first = messaging.sortedConversations.first {
                 path.append(first)
+            }
+            if ProcessInfo.processInfo.arguments.contains("-uiOpenSeller") {
+                path.append(SellerRef(name: "Chris L.", university: "MIT"))
             }
             #endif
         }

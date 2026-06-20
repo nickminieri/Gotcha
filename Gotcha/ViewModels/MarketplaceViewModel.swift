@@ -25,6 +25,9 @@ class MarketplaceViewModel: ObservableObject {
     }
     @Published var isPresentingCreateListing = false
     @Published var editingListing: Item?
+    @Published var reviews: [Review] = [] {
+        didSet { persistReviewsIfNeeded() }
+    }
     /// True when a saved profile was loaded, so we don't overwrite it from email.
     private(set) var hasStoredProfile = false
 
@@ -32,6 +35,7 @@ class MarketplaceViewModel: ObservableObject {
     private var persistenceEnabled = true
     private static let itemsKey = "gotcha.items.v1"
     private static let userKey = "gotcha.user.v1"
+    private static let reviewsKey = "gotcha.reviews.v1"
 
     init() {
         #if DEBUG
@@ -61,9 +65,15 @@ class MarketplaceViewModel: ObservableObject {
             if let d = Self.debugSamplePhoto("AR", [.systemPurple, .systemPink]) {
                 currentUser.avatarFilename = ImageStore.shared.save(d)
             }
+            reviews = [
+                Review(sellerName: "Chris L.", reviewerName: "Jordan M.", rating: 5, text: "Super responsive and the MacBook was exactly as described. Smooth meetup on campus!", date: Date(timeIntervalSinceNow: -86400 * 3)),
+                Review(sellerName: "Chris L.", reviewerName: "Sam R.", rating: 4, text: "Good seller, item was in great shape. Was a few minutes late but no big deal.", date: Date(timeIntervalSinceNow: -86400 * 10)),
+                Review(sellerName: "Alex R.", reviewerName: "Taylor K.", rating: 5, text: "Quick and friendly, would buy from again!", date: Date(timeIntervalSinceNow: -86400 * 2))
+            ]
         } else {
             loadItems()
             loadUser()
+            loadReviews()
         }
         if let i = args.firstIndex(of: "-uiAddTestListing"), i + 1 < args.count {
             addListing(title: args[i + 1], description: "Added by UI hook.", price: 42.00, category: .other, condition: .good)
@@ -78,6 +88,7 @@ class MarketplaceViewModel: ObservableObject {
         #else
         loadItems()
         loadUser()
+        loadReviews()
         #endif
     }
 
@@ -269,6 +280,33 @@ class MarketplaceViewModel: ObservableObject {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
+    // MARK: - Reviews
+    func reviews(for sellerName: String) -> [Review] {
+        reviews.filter { $0.sellerName == sellerName }.sorted { $0.date > $1.date }
+    }
+
+    func reviewCount(for sellerName: String) -> Int {
+        reviews.lazy.filter { $0.sellerName == sellerName }.count
+    }
+
+    /// Average rating for a seller, or nil when they have no reviews yet.
+    func averageRating(for sellerName: String) -> Double? {
+        let ratings = reviews.filter { $0.sellerName == sellerName }.map(\.rating)
+        guard !ratings.isEmpty else { return nil }
+        return Double(ratings.reduce(0, +)) / Double(ratings.count)
+    }
+
+    func addReview(sellerName: String, rating: Int, text: String) {
+        let review = Review(
+            sellerName: sellerName,
+            reviewerName: currentUser.name,
+            rating: rating,
+            text: text.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+        reviews.insert(review, at: 0)
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+
     // MARK: - Persistence
     /// Loads saved listings from disk, falling back to the bundled samples on
     /// first launch or if decoding fails.
@@ -297,6 +335,18 @@ class MarketplaceViewModel: ObservableObject {
         guard persistenceEnabled else { return }
         guard let data = try? JSONEncoder().encode(currentUser) else { return }
         UserDefaults.standard.set(data, forKey: Self.userKey)
+    }
+
+    private func loadReviews() {
+        guard let data = UserDefaults.standard.data(forKey: Self.reviewsKey),
+              let saved = try? JSONDecoder().decode([Review].self, from: data) else { return }
+        reviews = saved
+    }
+
+    private func persistReviewsIfNeeded() {
+        guard persistenceEnabled else { return }
+        guard let data = try? JSONEncoder().encode(reviews) else { return }
+        UserDefaults.standard.set(data, forKey: Self.reviewsKey)
     }
 
     #if DEBUG

@@ -11,6 +11,7 @@ struct ItemDetailView: View {
     let item: Item
     @ObservedObject var vm: MarketplaceViewModel
     let onMessage: (Item) -> Void
+    var onSeller: (SellerRef) -> Void = { _ in }
     @Environment(\.dismiss) private var dismiss
 
     // Always reflects latest favorite state from the VM
@@ -137,37 +138,51 @@ struct ItemDetailView: View {
                             .font(.system(size: 15, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
 
-                        HStack(spacing: 14) {
-                            // Avatar with first initial
-                            ZStack {
-                                Circle()
-                                    .fill(LinearGradient(
-                                        colors: item.category.gradientColors,
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ))
-                                    .frame(width: 48, height: 48)
-                                Text(String(item.sellerName.prefix(1)))
-                                    .font(.system(size: 20, weight: .black, design: .rounded))
-                                    .foregroundColor(.white)
-                            }
+                        Button {
+                            onSeller(SellerRef(name: item.sellerName, university: item.university))
+                        } label: {
+                            HStack(spacing: 14) {
+                                // Avatar with first initial
+                                ZStack {
+                                    Circle()
+                                        .fill(LinearGradient(
+                                            colors: item.category.gradientColors,
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ))
+                                        .frame(width: 48, height: 48)
+                                    Text(String(item.sellerName.prefix(1)))
+                                        .font(.system(size: 20, weight: .black, design: .rounded))
+                                        .foregroundColor(.white)
+                                }
 
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(item.sellerName)
-                                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                    .foregroundColor(.white)
-                                Text(item.university)
-                                    .font(.system(size: 13, design: .rounded))
-                                    .foregroundColor(.white.opacity(0.38))
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(item.sellerName)
+                                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                        .foregroundColor(.white)
+                                    if let avg = vm.averageRating(for: item.sellerName) {
+                                        HStack(spacing: 5) {
+                                            StarsView(rating: avg, size: 11)
+                                            Text(String(format: "%.1f · %d reviews", avg, vm.reviewCount(for: item.sellerName)))
+                                                .font(.system(size: 12, design: .rounded))
+                                                .foregroundColor(.white.opacity(0.45))
+                                        }
+                                    } else {
+                                        Text(item.university)
+                                            .font(.system(size: 13, design: .rounded))
+                                            .foregroundColor(.white.opacity(0.38))
+                                    }
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.white.opacity(0.3))
+                                    .font(.system(size: 14, weight: .semibold))
                             }
-                            Spacer()
-                            Image(systemName: "checkmark.seal.fill")
-                                .foregroundColor(Color(red: 0.50, green: 0.32, blue: 1.00))
-                                .font(.system(size: 22))
+                            .padding(14)
+                            .background(Color.white.opacity(0.06))
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
-                        .padding(14)
-                        .background(Color.white.opacity(0.06))
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .buttonStyle(SpringButtonStyle())
                         .padding(.top, 12)
 
                         // Posted date
@@ -239,7 +254,7 @@ struct ItemDetailView: View {
 
 #Preview {
     NavigationStack {
-        ItemDetailView(item: Item.sampleItems[0], vm: MarketplaceViewModel()) { _ in }
+        ItemDetailView(item: Item.sampleItems[0], vm: MarketplaceViewModel(), onMessage: { _ in })
     }
     .environmentObject(AppState())
 }
