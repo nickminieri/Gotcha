@@ -315,6 +315,27 @@ struct LoginFormPage: View {
                 .padding(.horizontal, 32)
                 .padding(.top, 28)
 
+                // Dev bypass — skip auth during testing
+                Button {
+                    appState.login()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "hammer.fill")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("Skip sign-in (dev)")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundColor(.white.opacity(0.5))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.18), style: StrokeStyle(lineWidth: 1, dash: [5, 4]))
+                    )
+                }
+                .padding(.horizontal, 32)
+                .padding(.top, 12)
+
                 // Divider
                 HStack(spacing: 12) {
                     Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
