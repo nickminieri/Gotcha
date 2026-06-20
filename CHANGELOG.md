@@ -5,6 +5,10 @@ A running log of notable changes to Gotcha.
 ## [Unreleased]
 
 ### Added
+- **Filters on Explore**: a filter sheet to narrow listings by condition
+  (multi-select), max price (slider), and a "hide sold items" toggle, with an
+  active-filter count badge on the filter button and a one-tap Clear. Filters
+  compose with category, search, and sort.
 - **Mark listings as sold**: owners can toggle "Mark as Sold" / "Mark as
   Available" from a listing's menu on the Profile tab. Sold listings get a red
   "SOLD" badge and dimmed art on cards, a struck-through price, and the detail

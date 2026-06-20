@@ -133,6 +133,7 @@ struct FloatingTabBar: View {
 struct ExploreTab: View {
     @ObservedObject var vm: MarketplaceViewModel
     let onSelect: (Item) -> Void
+    @State private var showFilters = false
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -243,6 +244,27 @@ struct ExploreTab: View {
                         .font(.system(size: 13, weight: .medium, design: .rounded))
                         .foregroundColor(.white.opacity(0.4))
                     Spacer()
+                    Button {
+                        showFilters = true
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.system(size: 12, weight: .bold))
+                            if vm.activeFilterCount > 0 {
+                                Text("\(vm.activeFilterCount)")
+                                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                            }
+                        }
+                        .foregroundColor(vm.activeFilterCount > 0 ? .white : Color(red: 0.70, green: 0.52, blue: 1.00))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(
+                            Capsule().fill(vm.activeFilterCount > 0
+                                ? Color(red: 0.60, green: 0.40, blue: 1.00)
+                                : Color(red: 0.70, green: 0.52, blue: 1.00).opacity(0.12))
+                        )
+                    }
+                    .padding(.trailing, 8)
                     Menu {
                         Picker("Sort", selection: $vm.sortOption) {
                             ForEach(MarketplaceViewModel.SortOption.allCases) { option in
@@ -297,6 +319,16 @@ struct ExploreTab: View {
 
                 Spacer().frame(height: 100)
             }
+        }
+        .sheet(isPresented: $showFilters) {
+            FilterSheet(vm: vm)
+        }
+        .onAppear {
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("-uiPresentFilters") {
+                showFilters = true
+            }
+            #endif
         }
     }
 }

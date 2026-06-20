@@ -16,6 +16,9 @@ class MarketplaceViewModel: ObservableObject {
     @Published var searchText: String = ""
     @Published var selectedCategory: Item.Category = .all
     @Published var sortOption: SortOption = .recent
+    @Published var conditionFilter: Set<Item.Condition> = []
+    @Published var maxPrice: Double?
+    @Published var hideSold: Bool = false
     @Published var selectedTab: Tab = .explore
     @Published var currentUser: User = .preview
     @Published var isPresentingCreateListing = false
@@ -103,13 +106,38 @@ class MarketplaceViewModel: ObservableObject {
 
     // MARK: - Computed
     var filteredItems: [Item] {
-        let byCategory = selectedCategory == .all
+        var result = selectedCategory == .all
             ? items
             : items.filter { $0.category == selectedCategory }
-        let bySearch = searchText.isEmpty
-            ? byCategory
-            : byCategory.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
-        return sorted(bySearch)
+        if !searchText.isEmpty {
+            result = result.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        }
+        if !conditionFilter.isEmpty {
+            result = result.filter { conditionFilter.contains($0.condition) }
+        }
+        if let maxPrice {
+            result = result.filter { $0.price <= maxPrice }
+        }
+        if hideSold {
+            result = result.filter { !$0.isSold }
+        }
+        return sorted(result)
+    }
+
+    /// Highest listing price, rounded up to a tidy slider ceiling.
+    var priceCeiling: Double {
+        let maxItem = items.map(\.price).max() ?? 1000
+        return (maxItem / 50).rounded(.up) * 50
+    }
+
+    var activeFilterCount: Int {
+        (conditionFilter.isEmpty ? 0 : 1) + (maxPrice == nil ? 0 : 1) + (hideSold ? 1 : 0)
+    }
+
+    func clearFilters() {
+        conditionFilter = []
+        maxPrice = nil
+        hideSold = false
     }
 
     private func sorted(_ list: [Item]) -> [Item] {
