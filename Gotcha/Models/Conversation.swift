@@ -31,6 +31,7 @@ struct Conversation: Identifiable, Codable, Hashable {
     var category: Item.Category
     var messages: [Message]
     var createdDate: Date
+    var unreadCount: Int
 
     init(
         id: UUID = UUID(),
@@ -39,7 +40,8 @@ struct Conversation: Identifiable, Codable, Hashable {
         itemTitle: String,
         category: Item.Category,
         messages: [Message] = [],
-        createdDate: Date = Date()
+        createdDate: Date = Date(),
+        unreadCount: Int = 0
     ) {
         self.id = id
         self.sellerName = sellerName
@@ -48,6 +50,7 @@ struct Conversation: Identifiable, Codable, Hashable {
         self.category = category
         self.messages = messages
         self.createdDate = createdDate
+        self.unreadCount = unreadCount
     }
 
     var lastMessage: Message? { messages.last }

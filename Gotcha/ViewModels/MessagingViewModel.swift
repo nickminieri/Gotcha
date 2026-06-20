@@ -13,6 +13,8 @@ class MessagingViewModel: ObservableObject {
     @Published var conversations: [Conversation] = [] {
         didSet { persistIfNeeded() }
     }
+    /// The conversation currently on screen, so its replies don't count as unread.
+    @Published var activeConversationID: UUID?
 
     private var persistenceEnabled = true
     private static let key = "gotcha.conversations.v1"
@@ -46,7 +48,8 @@ class MessagingViewModel: ObservableObject {
                                 date: Date(timeIntervalSinceNow: -7200)),
                         Message(text: "Sure, I'm around after 2pm 👍", isFromMe: false,
                                 date: Date(timeIntervalSinceNow: -7000))
-                    ]
+                    ],
+                    unreadCount: 1
                 )
             ]
         } else {
@@ -60,6 +63,21 @@ class MessagingViewModel: ObservableObject {
     /// Conversations ordered by most recent activity.
     var sortedConversations: [Conversation] {
         conversations.sorted { $0.lastActivity > $1.lastActivity }
+    }
+
+    var totalUnread: Int {
+        conversations.reduce(0) { $0 + $1.unreadCount }
+    }
+
+    func markRead(_ id: UUID) {
+        guard let index = conversations.firstIndex(where: { $0.id == id }),
+              conversations[index].unreadCount != 0 else { return }
+        conversations[index].unreadCount = 0
+    }
+
+    func deleteConversation(_ id: UUID) {
+        conversations.removeAll { $0.id == id }
+        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
     }
 
     /// Returns the existing conversation for an item/seller, or creates one
@@ -122,6 +140,10 @@ class MessagingViewModel: ObservableObject {
             guard let self,
                   let index = self.conversations.firstIndex(where: { $0.id == id }) else { return }
             self.conversations[index].messages.append(Message(text: reply, isFromMe: false))
+            // Count it as unread only if the user isn't looking at this thread.
+            if self.activeConversationID != id {
+                self.conversations[index].unreadCount += 1
+            }
         }
     }
 

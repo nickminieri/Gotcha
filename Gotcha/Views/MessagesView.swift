@@ -44,6 +44,15 @@ struct MessagesTab: View {
                                 ConversationRow(conversation: convo)
                             }
                             .buttonStyle(SpringButtonStyle())
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                        messaging.deleteConversation(convo.id)
+                                    }
+                                } label: {
+                                    Label("Delete Conversation", systemImage: "trash")
+                                }
+                            }
                         }
                     }
                     .padding(.horizontal, 20)
@@ -90,10 +99,23 @@ struct ConversationRow: View {
                     .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundColor(Color(red: 0.70, green: 0.52, blue: 1.00))
                     .lineLimit(1)
-                Text(conversation.lastMessage?.text ?? "")
-                    .font(.system(size: 13, design: .rounded))
-                    .foregroundColor(.white.opacity(0.45))
-                    .lineLimit(1)
+                HStack(spacing: 8) {
+                    Text(conversation.lastMessage?.text ?? "")
+                        .font(.system(size: 13,
+                                      weight: conversation.unreadCount > 0 ? .semibold : .regular,
+                                      design: .rounded))
+                        .foregroundColor(.white.opacity(conversation.unreadCount > 0 ? 0.85 : 0.45))
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    if conversation.unreadCount > 0 {
+                        Text("\(conversation.unreadCount)")
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                            .frame(minWidth: 18, minHeight: 18)
+                            .padding(.horizontal, 5)
+                            .background(Capsule().fill(Color(red: 0.60, green: 0.40, blue: 1.00)))
+                    }
+                }
             }
         }
         .padding(12)
@@ -153,6 +175,15 @@ struct ConversationView: View {
             }
         }
         .navigationBarHidden(true)
+        .onAppear {
+            messaging.activeConversationID = conversationID
+            messaging.markRead(conversationID)
+        }
+        .onDisappear {
+            if messaging.activeConversationID == conversationID {
+                messaging.activeConversationID = nil
+            }
+        }
     }
 
     private var header: some View {

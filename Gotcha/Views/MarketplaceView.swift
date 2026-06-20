@@ -37,7 +37,7 @@ struct MarketplaceView: View {
                 .animation(.easeInOut(duration: 0.18), value: vm.selectedTab)
             }
             .safeAreaInset(edge: .bottom) {
-                FloatingTabBar(selectedTab: $vm.selectedTab)
+                FloatingTabBar(selectedTab: $vm.selectedTab, messagesBadge: messaging.totalUnread)
             }
             .navigationDestination(for: Item.self) { item in
                 ItemDetailView(item: item, vm: vm) { selected in
@@ -74,6 +74,7 @@ struct MarketplaceView: View {
 // MARK: - Floating Tab Bar
 struct FloatingTabBar: View {
     @Binding var selectedTab: MarketplaceViewModel.Tab
+    var messagesBadge: Int = 0
 
     var body: some View {
         HStack(spacing: 0) {
@@ -85,12 +86,25 @@ struct FloatingTabBar: View {
                     }
                 } label: {
                     VStack(spacing: 5) {
-                        Image(systemName: selectedTab == tab
-                              ? tab.symbols.filled
-                              : tab.symbols.default)
-                            .font(.system(size: 22, weight: .semibold))
-                            .scaleEffect(selectedTab == tab ? 1.10 : 1.0)
-                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: selectedTab)
+                        ZStack(alignment: .topTrailing) {
+                            Image(systemName: selectedTab == tab
+                                  ? tab.symbols.filled
+                                  : tab.symbols.default)
+                                .font(.system(size: 22, weight: .semibold))
+                                .scaleEffect(selectedTab == tab ? 1.10 : 1.0)
+                                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: selectedTab)
+
+                            if tab == .messages && messagesBadge > 0 {
+                                Text("\(messagesBadge)")
+                                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                                    .foregroundColor(.white)
+                                    .frame(minWidth: 16, minHeight: 16)
+                                    .padding(.horizontal, 3)
+                                    .background(Capsule().fill(Color(red: 1.0, green: 0.3, blue: 0.4)))
+                                    .offset(x: 12, y: -8)
+                                    .transition(.scale.combined(with: .opacity))
+                            }
+                        }
                         Text(tab.rawValue)
                             .font(.system(size: 10, weight: .medium, design: .rounded))
                     }

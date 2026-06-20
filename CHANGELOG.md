@@ -5,6 +5,10 @@ A running log of notable changes to Gotcha.
 ## [Unreleased]
 
 ### Added
+- **Unread message badges**: a count badge on the Messages tab and on each
+  conversation row, cleared when you open the thread. Replies that arrive while
+  you're not viewing a thread increment its unread count.
+- **Delete conversations**: long-press a conversation to remove it.
 - **Messaging**: a real (local, persisted) messaging system replaces the
   "coming soon" placeholders. The Messages tab lists conversations (seller,
   item, last message, time); tapping opens a chat thread with bubbles and a
