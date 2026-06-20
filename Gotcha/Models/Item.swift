@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct Item: Identifiable {
+struct Item: Identifiable, Codable {
     let id: UUID
     var title: String
     var description: String
@@ -44,7 +44,7 @@ struct Item: Identifiable {
     }
 
     // MARK: - Category
-    enum Category: String, CaseIterable, Identifiable {
+    enum Category: String, CaseIterable, Identifiable, Codable {
         case all         = "All"
         case clothing    = "Clothing"
         case electronics = "Electronics"
@@ -81,7 +81,7 @@ struct Item: Identifiable {
     }
 
     // MARK: - Condition
-    enum Condition: String, CaseIterable {
+    enum Condition: String, CaseIterable, Codable {
         case brandNew = "Brand New"
         case likeNew  = "Like New"
         case good     = "Good"

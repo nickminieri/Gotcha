@@ -7,6 +7,9 @@ Gotcha is a digital marketplace app designed specifically for college students. 
 - **Search Functionality**: Search for items by name or category.
 - **Categories**: Browse items across various categories like Clothing, Electronics, Furniture, Appliances, Books, and more.
 - **Create Listings**: Post your own items for sale with a title, price, category, condition, and description — complete with a live preview of how the listing card will look. New listings appear instantly in the marketplace and on your profile.
+- **Edit & Delete Listings**: Manage your own posts from the Profile tab.
+- **Sort & Filter**: Sort listings by newest or price, alongside category and keyword search.
+- **Local Persistence**: Listings and favorites are saved on-device and restored across app launches.
 - **Favorite Items**: Mark items as favorites to save for later and view them on a dedicated Favorites page.
 - **Interactive UI**:
   - Explore tab for browsing the marketplace.

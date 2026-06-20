@@ -5,6 +5,11 @@ A running log of notable changes to Gotcha.
 ## [Unreleased]
 
 ### Added
+- **Local persistence**: listings (including your own and favorites) are saved
+  to `UserDefaults` as JSON and restored on launch, so changes survive app
+  restarts. `Item` and its enums are now `Codable`.
+- **Sort & result count on Explore**: a sort menu (Newest / Price low→high /
+  Price high→low) and a live "N listings" count above the grid.
 - **Edit & delete your own listings**: each row in the Profile "My Listings"
   section has a "•••" menu (and context menu) for Edit / Delete. Editing reuses
   the listing form pre-filled with the item's values; deleting asks for

@@ -10,19 +10,30 @@ import UIKit
 import Combine
 
 class MarketplaceViewModel: ObservableObject {
-    @Published var items: [Item] = Item.sampleItems
+    @Published var items: [Item] = Item.sampleItems {
+        didSet { persistItemsIfNeeded() }
+    }
     @Published var searchText: String = ""
     @Published var selectedCategory: Item.Category = .all
+    @Published var sortOption: SortOption = .recent
     @Published var selectedTab: Tab = .explore
     @Published var currentUser: User = .preview
     @Published var isPresentingCreateListing = false
     @Published var editingListing: Item?
 
+    /// When false (e.g. seeded UI-test runs), changes aren't written to disk.
+    private var persistenceEnabled = true
+    private static let itemsKey = "gotcha.items.v1"
+
     init() {
         #if DEBUG
         // Launch-argument hooks for deterministic screenshots / UI runs.
         let args = ProcessInfo.processInfo.arguments
+        if args.contains("-uiResetStore") {
+            UserDefaults.standard.removeObject(forKey: Self.itemsKey)
+        }
         if args.contains("-uiSeedMyListings") {
+            persistenceEnabled = false
             currentUser = User.fromCampusEmail("alex.rivera@nyu.edu")
             let mine = [
                 Item(title: "Desk Chair (ergonomic)", description: "Mesh back, adjustable height. Great for long study sessions.", price: 55.00, category: .furniture, condition: .good, sellerName: currentUser.name, university: currentUser.university),
@@ -30,6 +41,11 @@ class MarketplaceViewModel: ObservableObject {
             ]
             items.insert(contentsOf: mine, at: 0)
             currentUser.listedCount = mine.count
+        } else {
+            loadItems()
+        }
+        if let i = args.firstIndex(of: "-uiAddTestListing"), i + 1 < args.count {
+            addListing(title: args[i + 1], description: "Added by UI hook.", price: 42.00, category: .other, condition: .good)
         }
         if let i = args.firstIndex(of: "-uiStartTab"), i + 1 < args.count,
            let tab = Tab(rawValue: args[i + 1]) {
@@ -38,7 +54,26 @@ class MarketplaceViewModel: ObservableObject {
         if args.contains("-uiPresentCreate") {
             isPresentingCreateListing = true
         }
+        #else
+        loadItems()
         #endif
+    }
+
+    // MARK: - Sorting
+    enum SortOption: String, CaseIterable, Identifiable {
+        case recent       = "Newest"
+        case priceLowHigh = "Price: Low to High"
+        case priceHighLow = "Price: High to Low"
+
+        var id: String { rawValue }
+
+        var symbol: String {
+            switch self {
+            case .recent:       return "clock"
+            case .priceLowHigh: return "arrow.up"
+            case .priceHighLow: return "arrow.down"
+            }
+        }
     }
 
     // MARK: - Tab Definition
@@ -63,8 +98,18 @@ class MarketplaceViewModel: ObservableObject {
         let byCategory = selectedCategory == .all
             ? items
             : items.filter { $0.category == selectedCategory }
-        guard !searchText.isEmpty else { return byCategory }
-        return byCategory.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        let bySearch = searchText.isEmpty
+            ? byCategory
+            : byCategory.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        return sorted(bySearch)
+    }
+
+    private func sorted(_ list: [Item]) -> [Item] {
+        switch sortOption {
+        case .recent:       return list.sorted { $0.postedDate > $1.postedDate }
+        case .priceLowHigh: return list.sorted { $0.price < $1.price }
+        case .priceHighLow: return list.sorted { $0.price > $1.price }
+        }
     }
 
     var favoriteItems: [Item] {
@@ -138,5 +183,22 @@ class MarketplaceViewModel: ObservableObject {
 
     func currentState(of item: Item) -> Item {
         items.first(where: { $0.id == item.id }) ?? item
+    }
+
+    // MARK: - Persistence
+    /// Loads saved listings from disk, falling back to the bundled samples on
+    /// first launch or if decoding fails.
+    private func loadItems() {
+        guard let data = UserDefaults.standard.data(forKey: Self.itemsKey),
+              let saved = try? JSONDecoder().decode([Item].self, from: data) else {
+            return // keep the default sample items
+        }
+        items = saved
+    }
+
+    private func persistItemsIfNeeded() {
+        guard persistenceEnabled else { return }
+        guard let data = try? JSONEncoder().encode(items) else { return }
+        UserDefaults.standard.set(data, forKey: Self.itemsKey)
     }
 }

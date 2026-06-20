@@ -209,7 +209,37 @@ struct ExploreTab: View {
                     }
                     .padding(.horizontal, 20)
                 }
-                .padding(.bottom, 20)
+                .padding(.bottom, 16)
+
+                // Result count + sort
+                HStack {
+                    Text("^[\(vm.filteredItems.count) listing](inflect: true)")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundColor(.white.opacity(0.4))
+                    Spacer()
+                    Menu {
+                        Picker("Sort", selection: $vm.sortOption) {
+                            ForEach(MarketplaceViewModel.SortOption.allCases) { option in
+                                Label(option.rawValue, systemImage: option.symbol).tag(option)
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "arrow.up.arrow.down")
+                                .font(.system(size: 11, weight: .bold))
+                            Text(vm.sortOption.rawValue)
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        }
+                        .foregroundColor(Color(red: 0.70, green: 0.52, blue: 1.00))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(
+                            Capsule().fill(Color(red: 0.70, green: 0.52, blue: 1.00).opacity(0.12))
+                        )
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 16)
 
                 // Items grid
                 if vm.filteredItems.isEmpty {
