@@ -87,7 +87,8 @@ struct UserProfileView: View {
                             MyListingRow(
                                 item: item,
                                 onEdit: { vm.editingListing = item },
-                                onDelete: { pendingDelete = item }
+                                onDelete: { pendingDelete = item },
+                                onToggleSold: { vm.toggleSold(item) }
                             )
                         }
                     }
@@ -224,18 +225,34 @@ struct MyListingRow: View {
     let item: Item
     let onEdit: () -> Void
     let onDelete: () -> Void
+    let onToggleSold: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
             ListingImage(item: item, symbolSize: 22)
                 .frame(width: 56, height: 56)
+                .overlay {
+                    if item.isSold {
+                        Color.black.opacity(0.5)
+                    }
+                }
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(item.title)
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(item.title)
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                    if item.isSold {
+                        Text("SOLD")
+                            .font(.system(size: 9, weight: .black, design: .rounded))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(Color(red: 1.0, green: 0.3, blue: 0.4)))
+                    }
+                }
                 Text(item.category.rawValue)
                     .font(.system(size: 12, design: .rounded))
                     .foregroundColor(.white.opacity(0.38))
@@ -243,9 +260,14 @@ struct MyListingRow: View {
             Spacer()
             Text(String(format: "$%.2f", item.price))
                 .font(.system(size: 15, weight: .black, design: .rounded))
-                .foregroundColor(.white)
+                .foregroundColor(.white.opacity(item.isSold ? 0.4 : 1))
+                .strikethrough(item.isSold, color: .white.opacity(0.4))
 
             Menu {
+                Button { onToggleSold() } label: {
+                    Label(item.isSold ? "Mark as Available" : "Mark as Sold",
+                          systemImage: item.isSold ? "arrow.uturn.backward" : "checkmark.seal")
+                }
                 Button { onEdit() } label: {
                     Label("Edit", systemImage: "pencil")
                 }
@@ -266,6 +288,10 @@ struct MyListingRow: View {
                 .fill(Color.white.opacity(0.06))
         )
         .contextMenu {
+            Button { onToggleSold() } label: {
+                Label(item.isSold ? "Mark as Available" : "Mark as Sold",
+                      systemImage: item.isSold ? "arrow.uturn.backward" : "checkmark.seal")
+            }
             Button { onEdit() } label: { Label("Edit", systemImage: "pencil") }
             Button(role: .destructive) { onDelete() } label: { Label("Delete", systemImage: "trash") }
         }

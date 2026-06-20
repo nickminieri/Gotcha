@@ -29,6 +29,19 @@ struct ItemDetailView: View {
                         ListingImage(item: item, symbolSize: 110)
                             .frame(maxWidth: .infinity)
                             .frame(height: 320)
+                            .overlay {
+                                if current.isSold {
+                                    ZStack {
+                                        Color.black.opacity(0.5)
+                                        Text("SOLD")
+                                            .font(.system(size: 28, weight: .black, design: .rounded))
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 26)
+                                            .padding(.vertical, 10)
+                                            .background(Capsule().fill(Color(red: 1.0, green: 0.3, blue: 0.4)))
+                                    }
+                                }
+                            }
                             .clipped()
                             .ignoresSafeArea(edges: .top)
 
@@ -75,7 +88,8 @@ struct ItemDetailView: View {
                             Spacer()
                             Text(String(format: "$%.2f", item.price))
                                 .font(.system(size: 26, weight: .black, design: .rounded))
-                                .foregroundColor(.white)
+                                .foregroundColor(.white.opacity(current.isSold ? 0.4 : 1))
+                                .strikethrough(current.isSold, color: .white.opacity(0.4))
                         }
                         .padding(.top, 24)
 
@@ -189,22 +203,29 @@ struct ItemDetailView: View {
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                         onMessage(item)
                     } label: {
-                        Text("Message Seller")
+                        Text(current.isSold ? "Item Sold" : "Message Seller")
                             .font(.system(size: 17, weight: .semibold, design: .rounded))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 54)
                             .background(
-                                LinearGradient(
-                                    colors: [Color(red: 0.50, green: 0.32, blue: 1.00),
-                                             Color(red: 0.85, green: 0.55, blue: 1.00)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
+                                Group {
+                                    if current.isSold {
+                                        Color.white.opacity(0.12)
+                                    } else {
+                                        LinearGradient(
+                                            colors: [Color(red: 0.50, green: 0.32, blue: 1.00),
+                                                     Color(red: 0.85, green: 0.55, blue: 1.00)],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    }
+                                }
                             )
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     .buttonStyle(SpringButtonStyle())
+                    .disabled(current.isSold)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)

@@ -48,6 +48,7 @@ class MarketplaceViewModel: ObservableObject {
             if let d = Self.debugSamplePhoto("AirPods Pro", [.black, .systemGray]) {
                 items[1].imageFilename = ImageStore.shared.save(d)
             }
+            items[1].isSold = true
         } else {
             loadItems()
         }
@@ -135,6 +136,13 @@ class MarketplaceViewModel: ObservableObject {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         items[index].isFavorite.toggle()
+    }
+
+    /// Flips a listing's sold status (owner action).
+    func toggleSold(_ item: Item) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        items[index].isSold.toggle()
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
     /// Publishes a new listing attributed to the current user and surfaces it at

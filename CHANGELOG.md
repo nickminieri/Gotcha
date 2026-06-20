@@ -5,6 +5,10 @@ A running log of notable changes to Gotcha.
 ## [Unreleased]
 
 ### Added
+- **Mark listings as sold**: owners can toggle "Mark as Sold" / "Mark as
+  Available" from a listing's menu on the Profile tab. Sold listings get a red
+  "SOLD" badge and dimmed art on cards, a struck-through price, and the detail
+  screen's action button becomes a disabled "Item Sold".
 - **Unread message badges**: a count badge on the Messages tab and on each
   conversation row, cleared when you open the thread. Replies that arrive while
   you're not viewing a thread increment its unread count.

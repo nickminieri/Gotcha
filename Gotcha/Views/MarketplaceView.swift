@@ -351,6 +351,19 @@ struct ItemCard: View {
                     ListingImage(item: item, symbolSize: 48)
                         .frame(maxWidth: .infinity)
                         .frame(height: 140)
+                        .overlay {
+                            if item.isSold {
+                                ZStack {
+                                    Color.black.opacity(0.5)
+                                    Text("SOLD")
+                                        .font(.system(size: 15, weight: .black, design: .rounded))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 6)
+                                        .background(Capsule().fill(Color(red: 1.0, green: 0.3, blue: 0.4)))
+                                }
+                            }
+                        }
                         .clipShape(
                             UnevenRoundedRectangle(
                                 topLeadingRadius: 14,
