@@ -24,6 +24,11 @@ density**, not breadth.
 - **Designated safe meetup spots + in-chat scheduling** — curated campus spots
   (student union, library, campus PD, etc.) proposed as a meetup card in chat.
 - **Offers** — in-chat "Make an Offer" with accept/decline, shown as an offer card.
+- **Reserve & pay-at-meetup checkout** — a safety-first alternative to online
+  payments: reserve, lock in a safe campus meetup, inspect in person, then pay
+  the seller directly (cash/app of their choice). This sidesteps the
+  escrow/compliance burden while keeping the transaction safe — the common
+  pattern on campus marketplaces.
 
 ## Deferred (needs a backend / third parties)
 - **Robust student verification** — university SSO (Shibboleth/CAS/OAuth) or an

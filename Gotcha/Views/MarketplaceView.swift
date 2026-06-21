@@ -16,6 +16,7 @@ struct MarketplaceView: View {
     @State private var path = NavigationPath()
     @State private var didConfigureUser = false
     @State private var showNotifications = false
+    @State private var checkoutItem: Item?
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -47,6 +48,8 @@ struct MarketplaceView: View {
                     path.append(messaging.openConversationValue(for: selected))
                 }, onSeller: { seller in
                     path.append(seller)
+                }, onReserve: { selected in
+                    checkoutItem = selected
                 })
             }
             .navigationDestination(for: Conversation.self) { convo in
@@ -61,9 +64,14 @@ struct MarketplaceView: View {
             .sheet(item: $vm.editingListing) { item in
                 CreateListingView(vm: vm, editingItem: item)
             }
-            .sheet(isPresented: $showNotifications) {
-                NotificationsView(notifications: notifications)
-            }
+        }
+        // These two are attached to the NavigationStack (a different view than the
+        // sheets above) so multiple presentations don't compete on one view.
+        .sheet(isPresented: $showNotifications) {
+            NotificationsView(notifications: notifications)
+        }
+        .sheet(item: $checkoutItem) { item in
+            CheckoutView(item: item, vm: vm, messaging: messaging, notifications: notifications)
         }
         .onAppear {
             // Route messaging activity (offer accepts, meetup confirms) into the feed.
@@ -85,8 +93,15 @@ struct MarketplaceView: View {
             if ProcessInfo.processInfo.arguments.contains("-uiOpenSeller") {
                 path.append(SellerRef(name: "Chris L.", university: "MIT"))
             }
+            if ProcessInfo.processInfo.arguments.contains("-uiOpenFirstItem"),
+               let item = vm.items.first(where: { !$0.isSold && !vm.isOwnListing($0) }) {
+                path.append(item)
+            }
             if ProcessInfo.processInfo.arguments.contains("-uiPresentNotifications") {
                 showNotifications = true
+            }
+            if ProcessInfo.processInfo.arguments.contains("-uiPresentCheckout") {
+                checkoutItem = vm.items.first(where: { !$0.isSold && !vm.isOwnListing($0) }) ?? vm.items.first
             }
             #endif
         }

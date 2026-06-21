@@ -12,11 +12,23 @@ struct ItemDetailView: View {
     @ObservedObject var vm: MarketplaceViewModel
     let onMessage: (Item) -> Void
     var onSeller: (SellerRef) -> Void = { _ in }
+    var onReserve: (Item) -> Void = { _ in }
     @Environment(\.dismiss) private var dismiss
     @State private var showReport = false
 
     // Always reflects latest favorite state from the VM
     private var current: Item { vm.currentState(of: item) }
+    private var isOwn: Bool { vm.isOwnListing(item) }
+
+    private func disabledActionLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 17, weight: .semibold, design: .rounded))
+            .foregroundColor(.white.opacity(0.5))
+            .frame(maxWidth: .infinity)
+            .frame(height: 54)
+            .background(Color.white.opacity(0.10))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -237,33 +249,45 @@ struct ItemDetailView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                             .animation(.spring(response: 0.3, dampingFraction: 0.5), value: current.isFavorite)
                     }
-                    Button {
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        onMessage(item)
-                    } label: {
-                        Text(current.isSold ? "Item Sold" : "Message Seller")
-                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+
+                    if current.isSold {
+                        disabledActionLabel("Item Sold")
+                    } else if isOwn {
+                        disabledActionLabel("Your Listing")
+                    } else {
+                        // Message (secondary, icon)
+                        Button {
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            onMessage(item)
+                        } label: {
+                            Image(systemName: "bubble.left.fill")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(width: 54, height: 54)
+                                .background(Color.white.opacity(0.10))
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        }
+                        .buttonStyle(SpringButtonStyle())
+
+                        // Reserve (primary)
+                        Button {
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            onReserve(item)
+                        } label: {
+                            HStack(spacing: 7) {
+                                Image(systemName: "checkmark.shield.fill")
+                                    .font(.system(size: 15, weight: .bold))
+                                Text("Reserve")
+                                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                            }
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 54)
-                            .background(
-                                Group {
-                                    if current.isSold {
-                                        Color.white.opacity(0.12)
-                                    } else {
-                                        LinearGradient(
-                                            colors: [Color(red: 0.50, green: 0.32, blue: 1.00),
-                                                     Color(red: 0.85, green: 0.55, blue: 1.00)],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    }
-                                }
-                            )
+                            .background(Theme.accentGradient)
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        }
+                        .buttonStyle(SpringButtonStyle())
                     }
-                    .buttonStyle(SpringButtonStyle())
-                    .disabled(current.isSold)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)

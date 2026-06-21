@@ -204,6 +204,17 @@ class MarketplaceViewModel: ObservableObject {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
+    /// Marks a listing as no longer available (e.g. once a buyer reserves it).
+    func markSold(_ item: Item) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }), !items[index].isSold else { return }
+        items[index].isSold = true
+    }
+
+    /// Whether the given listing belongs to the signed-in user.
+    func isOwnListing(_ item: Item) -> Bool {
+        item.sellerName == currentUser.name
+    }
+
     /// Publishes a new listing attributed to the current user and surfaces it at
     /// the top of the marketplace.
     func addListing(

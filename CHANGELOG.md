@@ -5,6 +5,15 @@ A running log of notable changes to Gotcha.
 ## [Unreleased]
 
 ### Added
+- **Reserve & pay-at-meetup checkout**: a new "Reserve" action on a listing opens
+  a checkout sheet — item summary, a 3-step safety explainer (reserve → meet on
+  campus → inspect, then pay), a safe campus meetup-spot picker, a date/time
+  picker, and a price summary (payment happens in person, no card processing).
+  Confirming locks the meetup into the chat thread, posts an "Item reserved"
+  notification, marks the listing unavailable, and shows a confirmation receipt
+  with a confirmation number. The detail action bar now offers Favorite,
+  Message, and Reserve (and shows "Your Listing" / "Item Sold" where relevant).
+  (`CheckoutView`, `MarketplaceViewModel.markSold` / `isOwnListing`.)
 - **In-app notifications / activity center**: the bell in the Explore header now
   opens an Activity feed of offers, messages, reviews, sales, and meetups, each
   with a color-coded icon, relative timestamp, and unread state. The bell shows
