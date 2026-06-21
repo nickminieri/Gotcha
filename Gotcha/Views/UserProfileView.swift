@@ -130,6 +130,35 @@ struct UserProfileView: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 28)
 
+                // My Reservations
+                if !vm.reservations.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 8) {
+                            Text("My Reservations")
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                            if vm.activeReservationCount > 0 {
+                                Text("\(vm.activeReservationCount) active")
+                                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                                    .foregroundColor(Color(red: 0.45, green: 0.70, blue: 1.00))
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 3)
+                                    .background(Capsule().fill(Color(red: 0.45, green: 0.70, blue: 1.00).opacity(0.15)))
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        ForEach(vm.sortedReservations) { reservation in
+                            ReservationRow(
+                                reservation: reservation,
+                                onComplete: { vm.completeReservation(reservation) },
+                                onCancel: { vm.cancelReservation(reservation) }
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 28)
+                }
+
                 // My Listings
                 if !vm.myListings.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
@@ -359,6 +388,95 @@ struct MyListingRow: View {
             Button { onEdit() } label: { Label("Edit", systemImage: "pencil") }
             Button(role: .destructive) { onDelete() } label: { Label("Delete", systemImage: "trash") }
         }
+    }
+}
+
+// MARK: - Reservation Row
+struct ReservationRow: View {
+    let reservation: Reservation
+    let onComplete: () -> Void
+    let onCancel: () -> Void
+
+    private var isActive: Bool { reservation.status == .active }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                ListingImage(imageFilename: reservation.imageFilename,
+                             category: reservation.category, symbolSize: 22)
+                    .frame(width: 56, height: 56)
+                    .overlay { if !isActive { Color.black.opacity(0.4) } }
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(reservation.title)
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                    Text("from \(reservation.sellerName)")
+                        .font(.system(size: 12, design: .rounded))
+                        .foregroundColor(.white.opacity(0.38))
+                    // Status pill
+                    Text(reservation.status.label)
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundColor(reservation.status.tint)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(reservation.status.tint.opacity(0.15)))
+                        .padding(.top, 1)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(String(format: "$%.2f", reservation.price))
+                        .font(.system(size: 15, weight: .black, design: .rounded))
+                        .foregroundColor(.white)
+                    if isActive {
+                        Menu {
+                            Button { onComplete() } label: {
+                                Label("Mark as Picked Up", systemImage: "checkmark.seal")
+                            }
+                            Button(role: .destructive) { onCancel() } label: {
+                                Label("Cancel Reservation", systemImage: "xmark.circle")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.white.opacity(0.5))
+                                .frame(width: 28, height: 28)
+                                .contentShape(Rectangle())
+                        }
+                    }
+                }
+            }
+
+            // Meetup detail strip
+            HStack(spacing: 8) {
+                Image(systemName: "mappin.circle.fill")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(red: 0.45, green: 0.70, blue: 1.00))
+                Text(reservation.meetupSpot)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundColor(.white.opacity(0.7))
+                Text("·")
+                    .foregroundColor(.white.opacity(0.3))
+                Text(reservation.meetupDate.formatted(date: .abbreviated, time: .shortened))
+                    .font(.system(size: 12, design: .rounded))
+                    .foregroundColor(.white.opacity(0.45))
+                Spacer()
+            }
+            .padding(.top, 11)
+            .padding(.leading, 2)
+            .opacity(isActive ? 1 : 0.55)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.white.opacity(0.06))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(isActive ? reservation.status.tint.opacity(0.25) : Color.clear, lineWidth: 1)
+                )
+        )
     }
 }
 

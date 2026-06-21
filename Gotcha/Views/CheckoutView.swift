@@ -337,7 +337,9 @@ struct CheckoutView: View {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         orderNumber = "GC-" + String(UUID().uuidString.prefix(6)).uppercased()
 
-        // Lock in the meetup in chat, notify the buyer, and take the listing off market.
+        // Record the reservation, lock in the meetup in chat, notify the buyer,
+        // and take the listing off the market.
+        vm.addReservation(for: item, spot: selectedSpot.name, date: date, confirmation: orderNumber)
         let convo = messaging.openConversationValue(for: item)
         messaging.scheduleMeetup(spot: selectedSpot.name, date: date, to: convo.id)
         notifications.add(

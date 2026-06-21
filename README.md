@@ -16,6 +16,7 @@ Gotcha is a digital marketplace app designed specifically for college students. 
 - **Trust & Safety**: Student-only `.edu` login with verified badges, in-app reporting & blocking, a chat safety banner, in-chat offers, and safe on-campus meetup scheduling. (See [RESEARCH.md](RESEARCH.md) for the market research behind these.)
 - **Activity Center**: An in-app notifications feed (the bell in the Explore header) for offers, messages, reviews, sales, and meetups, with an unread-count badge and mark-read / clear actions. Accepted offers and confirmed meetups appear here automatically.
 - **Reserve & Pay at Meetup**: A safety-first checkout flow — reserve a listing, pick a safe on-campus meetup spot and time, then inspect the item and pay the seller in person (no card processing). Reserving notifies you, locks the meetup into chat, and marks the item unavailable, ending with a confirmation receipt.
+- **My Reservations**: A Profile section tracking your reserved items — meetup spot, time, and status (Reserved / Completed / Cancelled). Mark items as picked up, or cancel to return them to the market.
 - **Favorite Items**: Mark items as favorites to save for later and view them on a dedicated Favorites page.
 - **Interactive UI**:
   - Explore tab for browsing the marketplace.

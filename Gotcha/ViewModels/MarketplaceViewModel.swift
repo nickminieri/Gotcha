@@ -31,6 +31,9 @@ class MarketplaceViewModel: ObservableObject {
     @Published var blockedSellers: Set<String> = [] {
         didSet { persistBlockedIfNeeded() }
     }
+    @Published var reservations: [Reservation] = [] {
+        didSet { persistReservationsIfNeeded() }
+    }
     /// True when a saved profile was loaded, so we don't overwrite it from email.
     private(set) var hasStoredProfile = false
 
@@ -40,6 +43,7 @@ class MarketplaceViewModel: ObservableObject {
     private static let userKey = "gotcha.user.v1"
     private static let reviewsKey = "gotcha.reviews.v1"
     private static let blockedKey = "gotcha.blocked.v1"
+    private static let reservationsKey = "gotcha.reservations.v1"
 
     init() {
         #if DEBUG
@@ -79,6 +83,28 @@ class MarketplaceViewModel: ObservableObject {
             loadUser()
             loadReviews()
             loadBlocked()
+            loadReservations()
+        }
+        if args.contains("-uiSeedReservations") {
+            persistenceEnabled = false
+            reservations = [
+                Reservation(
+                    itemID: UUID(), title: "MacBook Pro 13\"", price: 850.00,
+                    imageFilename: nil, category: .electronics,
+                    sellerName: "Chris L.", university: "MIT",
+                    meetupSpot: "Campus Police Station",
+                    meetupDate: Date(timeIntervalSinceNow: 86400),
+                    confirmationNumber: "GC-7F3A21",
+                    createdDate: Date(timeIntervalSinceNow: -1700), status: .active),
+                Reservation(
+                    itemID: UUID(), title: "Calculus Textbook", price: 29.99,
+                    imageFilename: nil, category: .books,
+                    sellerName: "Morgan T.", university: "BU",
+                    meetupSpot: "Main Library",
+                    meetupDate: Date(timeIntervalSinceNow: -86400 * 4),
+                    confirmationNumber: "GC-1C90E4",
+                    createdDate: Date(timeIntervalSinceNow: -86400 * 5), status: .completed)
+            ]
         }
         if let i = args.firstIndex(of: "-uiAddTestListing"), i + 1 < args.count {
             addListing(title: args[i + 1], description: "Added by UI hook.", price: 42.00, category: .other, condition: .good)
@@ -95,6 +121,7 @@ class MarketplaceViewModel: ObservableObject {
         loadUser()
         loadReviews()
         loadBlocked()
+        loadReservations()
         #endif
     }
 
@@ -327,6 +354,54 @@ class MarketplaceViewModel: ObservableObject {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
+    // MARK: - Reservations
+    /// Reservations ordered with active ones first, then most recent.
+    var sortedReservations: [Reservation] {
+        reservations.sorted { lhs, rhs in
+            if (lhs.status == .active) != (rhs.status == .active) {
+                return lhs.status == .active
+            }
+            return lhs.createdDate > rhs.createdDate
+        }
+    }
+
+    var activeReservationCount: Int {
+        reservations.lazy.filter { $0.status == .active }.count
+    }
+
+    /// Records a reservation snapshot for a listing's agreed safe meetup.
+    func addReservation(for item: Item, spot: String, date: Date, confirmation: String) {
+        let reservation = Reservation(
+            itemID: item.id,
+            title: item.title,
+            price: item.price,
+            imageFilename: item.imageFilename,
+            category: item.category,
+            sellerName: item.sellerName,
+            university: item.university,
+            meetupSpot: spot,
+            meetupDate: date,
+            confirmationNumber: confirmation
+        )
+        reservations.insert(reservation, at: 0)
+    }
+
+    func completeReservation(_ reservation: Reservation) {
+        guard let index = reservations.firstIndex(where: { $0.id == reservation.id }) else { return }
+        reservations[index].status = .completed
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+
+    /// Cancels a reservation and puts the listing back on the market.
+    func cancelReservation(_ reservation: Reservation) {
+        guard let index = reservations.firstIndex(where: { $0.id == reservation.id }) else { return }
+        reservations[index].status = .cancelled
+        if let itemIndex = items.firstIndex(where: { $0.id == reservation.itemID }) {
+            items[itemIndex].isSold = false
+        }
+        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+    }
+
     // MARK: - Trust & Safety
     func isBlocked(_ sellerName: String) -> Bool { blockedSellers.contains(sellerName) }
 
@@ -403,6 +478,18 @@ class MarketplaceViewModel: ObservableObject {
         guard persistenceEnabled else { return }
         guard let data = try? JSONEncoder().encode(blockedSellers) else { return }
         UserDefaults.standard.set(data, forKey: Self.blockedKey)
+    }
+
+    private func loadReservations() {
+        guard let data = UserDefaults.standard.data(forKey: Self.reservationsKey),
+              let saved = try? JSONDecoder().decode([Reservation].self, from: data) else { return }
+        reservations = saved
+    }
+
+    private func persistReservationsIfNeeded() {
+        guard persistenceEnabled else { return }
+        guard let data = try? JSONEncoder().encode(reservations) else { return }
+        UserDefaults.standard.set(data, forKey: Self.reservationsKey)
     }
 
     #if DEBUG

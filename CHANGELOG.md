@@ -5,6 +5,13 @@ A running log of notable changes to Gotcha.
 ## [Unreleased]
 
 ### Added
+- **My Reservations** (Profile tab): reserved items now have a home — a section
+  showing each reservation's item, price, agreed safe-meetup spot and time, and
+  a status pill (Reserved / Completed / Cancelled), with an "active" count badge.
+  Active reservations can be marked "Picked Up" or cancelled (cancelling puts the
+  listing back on the market). Persisted to `UserDefaults` (`Reservation` model,
+  `MarketplaceViewModel.reservations`). `ListingImage` gained a filename+category
+  initializer so snapshots render without a full `Item`.
 - **Reserve & pay-at-meetup checkout**: a new "Reserve" action on a listing opens
   a checkout sheet — item summary, a 3-step safety explainer (reserve → meet on
   campus → inspect, then pay), a safe campus meetup-spot picker, a date/time
