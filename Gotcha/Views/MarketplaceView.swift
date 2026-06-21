@@ -12,8 +12,10 @@ struct MarketplaceView: View {
     @EnvironmentObject private var appState: AppState
     @StateObject private var vm = MarketplaceViewModel()
     @StateObject private var messaging = MessagingViewModel()
+    @StateObject private var notifications = NotificationsViewModel()
     @State private var path = NavigationPath()
     @State private var didConfigureUser = false
+    @State private var showNotifications = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -24,7 +26,8 @@ struct MarketplaceView: View {
                 Group {
                     switch vm.selectedTab {
                     case .explore:
-                        ExploreTab(vm: vm) { path.append($0) }
+                        ExploreTab(vm: vm, notifications: notifications,
+                                   onBell: { showNotifications = true }) { path.append($0) }
                     case .favorites:
                         FavoritesTab(vm: vm) { path.append($0) }
                     case .messages:
@@ -58,8 +61,15 @@ struct MarketplaceView: View {
             .sheet(item: $vm.editingListing) { item in
                 CreateListingView(vm: vm, editingItem: item)
             }
+            .sheet(isPresented: $showNotifications) {
+                NotificationsView(notifications: notifications)
+            }
         }
         .onAppear {
+            // Route messaging activity (offer accepts, meetup confirms) into the feed.
+            messaging.onActivity = { [weak notifications] note in
+                notifications?.add(note)
+            }
             // Derive the signed-in user's profile from their campus email, once.
             guard !didConfigureUser else { return }
             didConfigureUser = true
@@ -74,6 +84,9 @@ struct MarketplaceView: View {
             }
             if ProcessInfo.processInfo.arguments.contains("-uiOpenSeller") {
                 path.append(SellerRef(name: "Chris L.", university: "MIT"))
+            }
+            if ProcessInfo.processInfo.arguments.contains("-uiPresentNotifications") {
+                showNotifications = true
             }
             #endif
         }
@@ -142,6 +155,8 @@ struct FloatingTabBar: View {
 // MARK: - Explore Tab
 struct ExploreTab: View {
     @ObservedObject var vm: MarketplaceViewModel
+    @ObservedObject var notifications: NotificationsViewModel
+    let onBell: () -> Void
     let onSelect: (Item) -> Void
     @State private var showFilters = false
 
@@ -162,14 +177,31 @@ struct ExploreTab: View {
                     }
                     Spacer()
                     HStack(spacing: 10) {
-                        Button { } label: {
+                        Button {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            onBell()
+                        } label: {
                             Image(systemName: "bell")
                                 .font(.system(size: 17, weight: .semibold))
                                 .foregroundColor(.white)
                                 .frame(width: 44, height: 44)
                                 .background(Circle().fill(Theme.bgRaised))
                                 .overlay(Circle().strokeBorder(Theme.hairline, lineWidth: 1))
+                                .overlay(alignment: .topTrailing) {
+                                    if notifications.hasUnread {
+                                        Text("\(notifications.unreadCount)")
+                                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                                            .foregroundColor(.white)
+                                            .frame(minWidth: 16, minHeight: 16)
+                                            .padding(.horizontal, 3)
+                                            .background(Capsule().fill(Theme.sold))
+                                            .overlay(Capsule().strokeBorder(Theme.bg, lineWidth: 1.5))
+                                            .offset(x: 4, y: -3)
+                                            .transition(.scale.combined(with: .opacity))
+                                    }
+                                }
                         }
+                        .buttonStyle(SpringButtonStyle())
                         Button {
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
                             vm.isPresentingCreateListing = true

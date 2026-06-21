@@ -5,6 +5,13 @@ A running log of notable changes to Gotcha.
 ## [Unreleased]
 
 ### Added
+- **In-app notifications / activity center**: the bell in the Explore header now
+  opens an Activity feed of offers, messages, reviews, sales, and meetups, each
+  with a color-coded icon, relative timestamp, and unread state. The bell shows
+  an unread-count badge. Accepted offers and confirmed meetups generate live
+  notifications; rows support mark-as-read / delete (swipe-free context menu),
+  plus "Mark all as read" and "Clear all". Persisted to `UserDefaults`
+  (`AppNotification`, `NotificationsViewModel`, `NotificationsView`).
 - **Research-driven trust & safety suite** (see `RESEARCH.md`): `.edu`-gated
   login with **Student Verified** / **ID Verified** trust badges across the app;
   **report & block** flows (listings, sellers, conversations) that hide blocked

@@ -16,6 +16,10 @@ class MessagingViewModel: ObservableObject {
     /// The conversation currently on screen, so its replies don't count as unread.
     @Published var activeConversationID: UUID?
 
+    /// Called when something worth surfacing in the activity feed happens
+    /// (an offer is accepted, a meetup is confirmed, a reply arrives).
+    var onActivity: ((AppNotification) -> Void)?
+
     private var persistenceEnabled = true
     private static let key = "gotcha.conversations.v1"
 
@@ -157,6 +161,11 @@ class MessagingViewModel: ObservableObject {
                         isFromMe: false, kind: .system)
             )
             if self.activeConversationID != id { self.conversations[cIndex].unreadCount += 1 }
+            let itemTitle = self.conversations[cIndex].itemTitle
+            self.onActivity?(AppNotification(
+                kind: .offer, title: "Offer accepted",
+                body: "\(sellerName) accepted your \(Self.priceString(amount)) offer on “\(itemTitle)”.",
+                actorName: sellerName))
         }
     }
 
@@ -173,6 +182,11 @@ class MessagingViewModel: ObservableObject {
                 Message(text: "Sounds good — see you at \(spot)! 👍", isFromMe: false)
             )
             if self.activeConversationID != id { self.conversations[cIndex].unreadCount += 1 }
+            let sellerName = self.conversations[cIndex].sellerName
+            self.onActivity?(AppNotification(
+                kind: .meetup, title: "Meetup confirmed",
+                body: "\(sellerName) confirmed a meetup at \(spot).",
+                actorName: sellerName))
         }
     }
 
